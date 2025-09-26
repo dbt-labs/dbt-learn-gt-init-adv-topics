@@ -4,6 +4,7 @@ sources:
     schema: jaffle_shop  
     tables:
       - name: orders
+        description: order details raw table
         freshness:
           warn_after:
             count: 12
@@ -13,6 +14,15 @@ sources:
             period: hour
         loaded_at_field: _etl_loaded_at
       - name: customers
+        description: customer master raw table
+        columns:  
+        - name: id
+          description: primary key column for customer master
+          data_tests:
+          - not_null
+          - unique
+
+          
 
   - name: stripe
     tables:
