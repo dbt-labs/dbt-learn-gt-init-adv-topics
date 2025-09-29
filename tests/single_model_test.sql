@@ -1,4 +1,3 @@
-select
-    amount
-from {{ ref('orders') }}
-where amount <= 5
+select amount
+from {{ ref('stg_stripe__payment') }}
+where amount <= -1
