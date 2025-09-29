@@ -1,4 +1,4 @@
 select
 amount
-from {{ ref("stg_jaffle_shop__orders") }}
+from {{ ref("stg_stripe__payment") }}
 where amount <= 5
