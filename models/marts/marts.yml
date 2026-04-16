@@ -1,0 +1,13 @@
+models:
+  - name: dim_customers
+    description: Dimension model of Customers
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id")}}'
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments: 
+                to: source('jaffle_shop','customers')
+                field: id

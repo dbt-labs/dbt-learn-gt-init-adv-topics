@@ -35,6 +35,10 @@ vars:
 # using the `{{ config(...) }}` macro.
 
 models:
+  +persist_docs:
+    relation: true
+    columns: true
+
   jaffle_shop:
     +materialized: view
     marts:

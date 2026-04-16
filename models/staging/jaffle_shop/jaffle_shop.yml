@@ -1,0 +1,31 @@
+models:
+  - name: stg_jaffle_shop__orders
+    description:  This is the staging model for Orders
+    columns:
+      - name: order_id
+        description: This is the Primary Key
+        data_tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: '{{ doc("customer_id")}}'
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop__customers')
+                field: customer_id
+      - name: status
+        description: '{{ doc("order_status")}}'
+        data_tests:
+          - accepted_values:
+              arguments: 
+                values: ["placed", "shipped", "completed", "returned", "return_pending"]
+  - name: stg_jaffle_shop__customers
+    columns:
+      - name: customer_id
+        description: '{{ doc("customer_id")}}'
+        data_tests:
+          - not_null
+          - unique
+          
+      

@@ -1,12 +1,27 @@
 sources:
   - name: jaffle_shop
+    description: From the Jaffle shop source
     database: raw
     schema: jaffle_shop
     tables:
       - name: customers
-        
+        description: This the customers source data from jaffleshop
+        columns:
+          - name: id
+            description: this is the primary key of customers model and will be renamed to customer_id
+            data_tests:
+              - not_null
+              - unique
+              
+    
             
       - name: orders
+        columns:
+          - name: id
+            data_tests:
+              - not_null
+              - unique
+              
         config:
           loaded_at_field: _ETL_LOADED_AT
           freshness: 
