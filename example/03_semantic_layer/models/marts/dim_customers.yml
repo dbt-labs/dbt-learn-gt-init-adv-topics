@@ -1,0 +1,68 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: Customer dimension with one row per customer, including customer attributes, first and most recent order dates, lifetime order count, and lifetime value.
+    semantic_model:
+      enabled: true
+
+    agg_time_dimension: first_order_date
+
+    columns:
+      - name: customer_id
+        description: Eindeutiger Primärschlüssel des Kunden.
+        entity:
+          name: customer
+          type: primary
+        data_tests:
+          - not_null
+          - unique
+
+      - name: first_name
+        description: Vorname des Kunden.
+        dimension:
+          type: categorical
+
+      - name: last_name
+        description: Nachname des Kunden.
+        dimension:
+          type: categorical
+
+      - name: first_order_date
+        description: Datum der ersten Bestellung des Kunden.
+        granularity: day
+        dimension:
+          type: time
+
+      - name: most_recent_order_date
+        description: Datum der letzten Bestellung des Kunden.
+        granularity: day
+        dimension:
+          type: time
+
+      - name: number_of_orders
+        description: Gesamtzahl der Bestellungen des Kunden.
+        data_tests:
+          - not_null
+
+      - name: lifetime_value
+        description: Kumulierte Umsatzsumme des Kunden über alle Bestellungen.
+
+    metrics:
+      - name: customers
+        description: Count of customers.
+        type: simple
+        agg: count
+        expr: 1
+
+      - name: customer_lifetime_orders
+        description: Sum of customer lifetime order counts.
+        type: simple
+        agg: sum
+        expr: number_of_orders
+
+      - name: customer_lifetime_value
+        description: Sum of customer lifetime value in USD.
+        type: simple
+        agg: sum
+        expr: lifetime_value

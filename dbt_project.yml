@@ -35,6 +35,7 @@ vars:
 # using the `{{ config(...) }}` macro.
 
 models:
+  +static_analysis: strict
   jaffle_shop:
     +materialized: view
 

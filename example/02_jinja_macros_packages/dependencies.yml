@@ -1,0 +1,11 @@
+# Package dependencies are in fact standalone dbt projects with models, macros, 
+# and other resources that tackle a specific problem area.
+packages:
+  - package: dbt-labs/dbt_utils
+    version: 1.3.3
+  - package: metaplane/dbt_expectations
+    version: 0.10.10
+
+# Project dependencies are designed for the dbt Mesh and cross-project reference workflow
+# projects:
+#   - name: sap_harmonized
