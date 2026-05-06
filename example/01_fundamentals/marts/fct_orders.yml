@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: fct_orders
+    description: Fact table with one row per order, including the customer, order date, and successful payment amount.
+    columns:
+      - name: order_id
+        description: Eindeutiger Primärschlüssel der Bestellung.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: Fremdschlüssel zum Kunden der Bestellung.
+        data_tests:
+          - not_null
+
+      - name: order_date
+        description: Datum, an dem die Bestellung aufgegeben wurde.
+        data_tests:
+          - not_null
+
+      - name: amount_usd
+        description: Erfolgreich bezahlter Betrag der Bestellung in US-Dollar.
+        data_tests:
+          - not_null
