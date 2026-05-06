@@ -1,0 +1,65 @@
+version: 2
+
+models:
+  - name: fct_orders
+    description: Fact table with one row per order, including the customer, order date, and successful payment amount.
+    semantic_model:
+      enabled: true
+
+    agg_time_dimension: order_date
+
+    columns:
+      - name: order_id
+        description: Eindeutiger Primärschlüssel der Bestellung.
+        entity:
+          name: order_id
+
+          type: primary
+        data_tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: Fremdschlüssel zum Kunden der Bestellung.
+        entity:
+          name: customer
+          type: foreign
+        data_tests:
+          - not_null
+
+      - name: order_date
+        description: Datum, an dem die Bestellung aufgegeben wurde.
+        granularity: day
+        dimension:
+          type: time
+        data_tests:
+          - not_null
+
+      - name: success_amount_usd
+        description: Erfolgreich bezahlter Betrag der Bestellung in US-Dollar.
+        data_tests:
+          - not_null
+
+      - name: fail_amount_usd
+        description: Fehlgeschlagener Zahlungsbetrag der Bestellung in US-Dollar.
+        data_tests:
+          - not_null
+
+    metrics:
+      - name: orders
+        description: Count of orders.
+        type: simple
+        agg: count
+        expr: 1
+
+      - name: order_revenue
+        description: Sum of successful order payment amounts in USD.
+        type: simple
+        agg: sum
+        expr: success_amount_usd
+
+      - name: failed_order_amount
+        description: Sum of failed payment amounts in USD.
+        type: simple
+        agg: sum
+        expr: fail_amount_usd
