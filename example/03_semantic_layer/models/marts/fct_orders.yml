@@ -75,3 +75,12 @@ models:
         type: ratio
         numerator: order_revenue
         denominator: customers
+
+      - name: failed_revenue_pct
+        description: Percentage of revenue missed out on failed payments
+        label: failed_revenue_pct
+        type: derived
+        expr: failed_order_amount / order_revenue
+        input_metrics:
+          - name: failed_order_amount
+          - name: order_revenue
