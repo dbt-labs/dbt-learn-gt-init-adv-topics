@@ -25,9 +25,10 @@ models:
         data_tests:
           - not_null
           - dbt_expectations.expect_column_median_to_be_between:
-              min_value: 15
-              max_value: 20
-              strictly: true # (Optional. Default is 'false'. Adds an 'or equal to' to the comparison operator for min/max)
+              arguments:
+                min_value: 15
+                max_value: 20
+                strictly: true # (Optional. Default is 'false'. Adds an 'or equal to' to the comparison operator for min/max)
 
 
       - name: fail_amount_usd
