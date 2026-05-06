@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: stg_stripe__payment
+    description: "{{ doc('stripe__payment') }}"
+    columns:
+      - name: payment_id
+        description: Unique identifier for a payment
+      - name: amount_usd
+        description: "{{ doc('amount') }}"
+
