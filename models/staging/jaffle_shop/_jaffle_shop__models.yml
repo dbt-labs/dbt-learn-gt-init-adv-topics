@@ -38,6 +38,9 @@ models:
 
 
      - name: order_status
+
+       description: "{{ doc('order_status') }}"
+
        data_tests:
          - accepted_values:
              arguments:
