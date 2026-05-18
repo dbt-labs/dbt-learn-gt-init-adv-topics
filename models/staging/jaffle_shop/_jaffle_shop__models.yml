@@ -47,6 +47,9 @@ models:
 
      - name: order_date
        description: Date order was placed in YYYY-MM-DD format
+       data_tests:
+         - date_greater_than_2017
+
 
 
      - name: _etl_loaded_at
