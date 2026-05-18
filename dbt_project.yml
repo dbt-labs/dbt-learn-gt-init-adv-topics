@@ -35,7 +35,8 @@ vars:
 # using the `{{ config(...) }}` macro.
 
 models:
-  jaffle_shop:
-    +materialized: view
-
-    
+ jaffle_shop:
+   staging:
+     +materialized: view
+   marts:
+     +materialized: table
