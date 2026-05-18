@@ -32,7 +32,7 @@ models:
                 field: customer_id
 
       - name: order_status
-        description: "{{ docs('order_status') }}"
+        description: "{{ doc('order_status') }}"
         data_tests:
           - accepted_values:
               arguments: 
