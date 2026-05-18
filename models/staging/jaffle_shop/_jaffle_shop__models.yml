@@ -48,6 +48,10 @@ models:
 
 
      - name: order_date
+
+       data_tests:
+         - date_greater_than_2017
+
        description: Date order was placed in YYYY-MM-DD format
 
 
