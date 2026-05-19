@@ -9,6 +9,8 @@ with
 source as (
 
     select * from {{ source('snowplow', 'events') }}
+    where collector_tstamp BETWEEN '2026-05-19 00:00:00' AND '2026-05-19 23:59:59'
+    and event = 'page_view'
 
 ),
 
