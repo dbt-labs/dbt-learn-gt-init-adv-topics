@@ -46,11 +46,21 @@ models:
              arguments:
                values: ['placed', 'shipped', 'completed', 'return_pending', 'returned']
 
+         - dbt_utils.not_accepted_values:
+             arguments:
+               values: ['xxxxx']
+
+
 
      - name: order_date
 
        data_tests:
-         - date_greater_than_2017
+
+         - date_greater_than:
+             arguments:
+               date_field: "2018-01-01"
+
+
 
        description: Date order was placed in YYYY-MM-DD format
 
