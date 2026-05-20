@@ -1,3 +1,9 @@
+{{
+    config(
+        materialized='table'
+    )
+}}
+
 with orders as (
     select order_date, count(*) as orders
     from {{ ref('stg_jaffle_shop__orders') }}
