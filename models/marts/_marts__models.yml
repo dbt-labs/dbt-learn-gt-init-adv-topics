@@ -41,7 +41,7 @@ models:
       config: 
         alias: dim_customers
       columns:
-        - name: custome_lifetime_value
+        - name: customer_lifetime_value
           data_type: number
         - include: all
           exclude: [lifetime_value]
