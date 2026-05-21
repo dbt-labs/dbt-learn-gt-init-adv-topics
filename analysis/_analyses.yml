@@ -1,0 +1,4 @@
+analyses:
+  - name: orders_by_day
+    config: 
+      group: marketing

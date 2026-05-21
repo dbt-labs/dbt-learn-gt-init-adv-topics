@@ -4,6 +4,11 @@ models:
    columns:
      - name: customer_id
        description: Integer identified of customer from source table
+       config: 
+        group: marketing
+        access: private
+        
+
        data_tests:
          - unique
          - not_null
@@ -22,6 +27,10 @@ models:
 
  - name: stg_jaffle_shop__orders
    description: One record per order
+   config: 
+    group: marketing
+    access: private
+   
    columns:
      - name: order_id
        data_tests:

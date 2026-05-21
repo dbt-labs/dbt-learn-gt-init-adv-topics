@@ -1,0 +1,16 @@
+models:
+- name: fct_orders
+  config:
+   group: marketing
+   access: protected
+
+- name: dim_customers
+  config:
+   group: marketing
+   access: public
+
+analyses:
+  - name: orders_by_day
+  config: 
+    group: marketing
+    access: private
