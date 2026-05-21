@@ -22,6 +22,10 @@ models:
 
  - name: stg_jaffle_shop__orders
    description: One record per order
+   config:
+     group: marketing
+     access: protected
+
    columns:
      - name: order_id
        data_tests:
@@ -54,7 +58,7 @@ models:
        data_tests:
          - date_greater_than:
              arguments:
-               date_field: "2018-01-01"
+               date_field: "2018-02-01"
 
 
 

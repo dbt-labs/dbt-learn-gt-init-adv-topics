@@ -1,6 +1,7 @@
 -- models/marts/fct_page_views.sql
 {{ config(
-    materialized = 'incremental'
+    materialized = 'incremental',
+    unique_key= 'page_view_id'
 ) }}
 
 with events as (
