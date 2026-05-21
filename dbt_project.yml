@@ -36,10 +36,9 @@ vars:
 
 models:
   +transient: false
-  +copy_grants: true
   jaffle_shop:
    staging:
-     +materialized: view
+     +materialized: "{{ env_var('DBT_MATERIALIZATION') }}"
    marts:
      +materialized: table
 

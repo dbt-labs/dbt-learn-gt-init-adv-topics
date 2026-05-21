@@ -1,9 +1,15 @@
 models:
  - name: stg_jaffle_shop__customers
    description: One record per customer
+   config:
+     group: marketing
+     access: private
+     
    columns:
      - name: customer_id
        description: Integer identified of customer from source table
+
+
        data_tests:
          - unique
          - not_null
@@ -22,10 +28,9 @@ models:
 
  - name: stg_jaffle_shop__orders
    description: One record per order
-
    config:
      group: marketing
-     access: protected
+     access: private
 
    columns:
      - name: order_id
