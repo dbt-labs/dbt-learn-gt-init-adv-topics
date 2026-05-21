@@ -24,7 +24,7 @@ models:
    description: One record per order
    config:
       group: marketing
-      access: private
+      access: public
    columns:
      - name: order_id
        data_tests:

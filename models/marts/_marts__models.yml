@@ -40,11 +40,11 @@ models:
 
     - name: lifetime_value
       data_type: number
+
+
   versions:
    - v: 1
    - v: 2
-     config:
-       alias: dim_customers
      columns:
        - name: customer_lifetime_value
          data_type: number
