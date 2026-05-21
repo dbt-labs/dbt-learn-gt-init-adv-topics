@@ -22,6 +22,11 @@ models:
 
  - name: stg_jaffle_shop__orders
    description: One record per order
+
+   config:
+     group: marketing
+     access: protected
+
    columns:
      - name: order_id
        data_tests:

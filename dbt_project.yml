@@ -35,6 +35,8 @@ vars:
 # using the `{{ config(...) }}` macro.
 
 models:
+  +transient: false
+  +copy_grants: true
   jaffle_shop:
    staging:
      +materialized: view
