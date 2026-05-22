@@ -68,7 +68,7 @@ models:
 
          - date_greater_than:
              arguments:
-               date_field: "2018-01-01"
+               date_field: "2018-02-01"
 
 
 
