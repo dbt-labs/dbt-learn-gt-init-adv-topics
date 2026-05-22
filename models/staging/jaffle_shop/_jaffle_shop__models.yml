@@ -55,7 +55,11 @@ models:
 
      - name: order_date
        description: Date order was placed in YYYY-MM-DD format
-
+      
+       data_tests:
+        - date_greater_than:  
+            arguments:
+              date_field: "2018-01-01"
 
      - name: _etl_loaded_at
        description: Timestamp of when recorded was added to source table in ISO 8601 timestamp format
