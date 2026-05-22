@@ -3,7 +3,7 @@ models:
    description: One record per customer
    config:
      group: marketing
-     access: private
+     access: protected
 
    columns:
      - name: customer_id
@@ -28,7 +28,7 @@ models:
    description: One record per order
    config:
      group: marketing
-     access: private
+     access: protected
 
    columns:
      - name: order_id
