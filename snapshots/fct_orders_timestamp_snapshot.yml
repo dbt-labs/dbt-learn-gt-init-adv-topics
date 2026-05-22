@@ -1,0 +1,11 @@
+snapshots:
+- name: fct_orders_timestamp_snapshot
+  description: Full snapshot of fct_orders_dynamic table using timestamp strategy.
+  relation: ref('fct_orders_dynamic')
+  config:
+    database: dbt_learn
+    schema: snapshots
+    strategy: timestamp
+    unique_key: order_id
+    updated_at: updated_tstamp
+    dbt_valid_to_current: "to_date('9999-12-31')"
