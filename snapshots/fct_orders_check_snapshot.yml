@@ -1,0 +1,16 @@
+snapshots:
+- name: fct_orders_check_snapshot
+  description: Full snapshot of fct_orders_dynamic table using check strategy.
+  relation: ref('fct_orders_dynamic')
+  config:
+    database: dbt_learn
+    schema: snapshots
+    strategy: check
+    check_cols: ['updated']
+    unique_key: order_id
+    dbt_valid_to_current: "to_date('9999-12-31')"
+    snapshot_meta_column_names:
+      dbt_valid_from: snapshot_from
+      dbt_valid_to: snapshot_to
+      dbt_scd_id: snapshot_id
+      dbt_updated_at: snapshot_updated_at

@@ -4,6 +4,10 @@ models:
    group: marketing
    access: protected
 
+- name: fct_orders_dynamic
+  config:
+   group: marketing
+   access: protected
 
 - name: dim_customers
   latest_version: 2
