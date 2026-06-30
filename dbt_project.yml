@@ -36,6 +36,16 @@ vars:
 
 models:
   jaffle_shop:
-    +materialized: view
-
+    +persist_docs:
+      relation: true
+      columns: true
     
+    marts:
+      +materialized: table
+
+    staging: 
+      +materialized: view
+
+data_tests:
+  +store_failures: true
+  +schema: null
