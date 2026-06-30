@@ -1,0 +1,67 @@
+version: 2
+
+models:
+  - name: stg_jaffle_shop__customers
+    config:
+      materialized: table
+    description: "Staged customer records from the `jaffle_shop` source, with source column names standardized for downstream use."
+    columns:
+      - name: customer_id
+        data_type: number
+        description: "Primary key for each customer."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: first_name
+        data_type: varchar
+        description: "Customer's first name from the source system."
+
+      - name: last_name
+        data_type: varchar
+        description: "Customer's last name from the source system."
+
+  - name: stg_jaffle_shop__orders
+    description: "Staged order records from the `jaffle_shop` source, with standardized customer and status fields for downstream joins and reporting."
+    columns:
+      - name: order_id
+        data_type: number
+        description: "Primary key for each order."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        data_type: number
+        description: "Foreign key to the customer who placed the order."
+
+      - name: order_date
+        data_type: date
+        description: "Date the order was placed."
+
+      - name: order_status
+        data_type: varchar
+        description: '{{ doc("_orders_status_codes") }}'
+
+  - name: stg_jaffle_shop__products
+    description: "Staged product records from the `jaffle_shop` source with product attributes exposed for downstream models."
+    columns:
+      - name: sku
+        data_type: varchar
+        description: '{{ doc("product_sku") }}'
+
+      - name: name
+        data_type: varchar
+        description: "Product name."
+
+      - name: type
+        data_type: varchar
+        description: '{{ doc("_orders_status_codes") }}'
+
+      - name: description
+        data_type: varchar
+        description: "Free-text product description from the source system."
+
+      - name: price
+        data_type: number
+        description: "Product price recorded in the source system."
