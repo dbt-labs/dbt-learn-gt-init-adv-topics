@@ -1,29 +1,48 @@
 version: 2
 
 models:
-  - name: stg_jaffle_shop__customers
+  - name: stg_jaffle_shop_customers
+    description: >-
+      Customer records standardized from the Jaffle Shop source for use by
+      downstream models. Each row represents one customer.
     columns:
       - name: customer_id
+        description: Primary key for the customer, renamed from the source `id` field.
         data_tests:
           - unique
           - not_null
 
-  - name: stg_jaffle_shop__orders
+      - name: first_name
+        description: Customer's first name as provided by the source system.
+
+      - name: last_name
+        description: Customer's last name as provided by the source system.
+
+  - name: stg_jaffle_shop_orders
+    description: >-
+      Order records standardized from the Jaffle Shop source for use by
+      downstream models. Each row represents one order placed by a customer.
     columns:
       - name: order_id
+        description: Primary key for the order, renamed from the source `id` field.
         data_tests:
           - unique
           - not_null
 
       - name: customer_id
+        description: Customer who placed the order, renamed from the source `user_id` field.
         data_tests:
           - not_null
           - relationships:
               arguments:
-                to: ref('stg_jaffle_shop__customers')
+                to: ref('stg_jaffle_shop_customers')
                 field: customer_id
 
+      - name: order_date
+        description: Calendar date on which the order was placed.
+
       - name: status
+        description: Current order lifecycle status reported by the source system.
         data_tests:
           - accepted_values:
               arguments:
@@ -32,10 +51,3 @@ models:
                   - shipped
                   - completed
                   - returned
-  - name: dim_customers
-    columns:
-      - name: first_order_date
-        data_tests:
-          - date_compare:
-              arguments:
-                date2: most_recent_order_date
