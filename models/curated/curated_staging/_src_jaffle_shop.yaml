@@ -2,29 +2,39 @@ version: 2
 
 sources:
   - name: jaffle_shop
+    description: Operational Jaffle Shop data in the RAW database, including parallel numeric-ID and string-ID datasets used by different order flows.
     database: raw
     tables:
       - name: customer_web_activity
+        description: Web engagement activity at one row per recorded customer session. Customer identifiers align with the numeric-ID customers source.
         columns:
           - name: customer_id
+            description: Numeric identifier of the customer associated with the session.
             data_tests:
               - not_null
               - relationships:
                   arguments:
                     to: source('jaffle_shop', 'customers')
                     field: id
+          - name: web_session_length
+            description: Recorded duration of the web session.
           - name: session_date
+            description: Calendar date on which the session occurred.
             data_tests:
               - date_compare:
                   arguments:
                     date2: current_date()
+          - name: count_pages_visited
+            description: Number of pages viewed during the session.
           - name: device_type
+            description: Device category used for the session, currently Desktop, Mobile, or Tablet.
             data_tests:
               - not_null
               - accepted_values:
                   arguments:
                     values: ['Desktop', 'Mobile', 'Tablet']
           - name: referrer_source
+            description: Acquisition channel or referring platform credited with the session.
             data_tests:
               - not_null
               - accepted_values:
@@ -32,22 +42,32 @@ sources:
                     values: ['Direct', 'Email', 'Facebook', 'Google', 'Instagram', 'Other']
 
       - name: customers
+        description: Customer reference data for the numeric-ID order flow, with one row per customer.
         columns:
           - name: id
+            description: Primary key for a customer in the numeric-ID order flow.
             data_tests:
               - unique
               - not_null
+          - name: first_name
+            description: Customer's given name as supplied by the operational system.
+          - name: last_name
+            description: Customer's family name as supplied by the operational system.
 
       - name: items
+        description: Item-level records for an alternate order feed, with one row per item ID. Its order IDs are not currently aligned with raw_orders, so consumers should not assume that relationship.
         columns:
           - name: id
+            description: Primary key for an item record.
             data_tests:
               - unique
               - not_null
           - name: order_id
+            description: Order identifier supplied by the item feed; currently not referentially aligned with raw_orders.
             data_tests:
               - not_null
           - name: sku
+            description: Product SKU associated with the item.
             data_tests:
               - not_null
               - relationships:
@@ -55,28 +75,40 @@ sources:
                     to: source('jaffle_shop', 'products')
                     field: sku
 
+
       - name: locations
+        description: Store location reference data at one row per location, including the tax rate and opening timestamp.
         columns:
           - name: location_id
+            description: Primary key for a store location.
             data_tests:
               - unique
               - not_null
+          - name: location_name
+            description: Display name of the store location.
+          - name: tax_rate
+            description: Tax rate configured for transactions at the location.
           - name: opened_date
+            description: Timestamp when the location opened for business.
             data_tests:
               - date_compare:
                   arguments:
                     date2: current_timestamp()
 
       - name: order_items
+        description: Denormalized item-level order feed at one row per order item, including product attributes and supply cost. Most order IDs are not currently aligned with raw_orders.
         columns:
           - name: order_item_id
+            description: Primary key for an order item record.
             data_tests:
               - unique
               - not_null
           - name: order_id
+            description: Order identifier supplied by this feed; currently not reliably aligned with raw_orders.
             data_tests:
               - not_null
           - name: product_id
+            description: Product SKU associated with the order item.
             data_tests:
               - not_null
               - relationships:
@@ -84,18 +116,32 @@ sources:
                     to: source('jaffle_shop', 'raw_products')
                     field: sku
           - name: ordered_at
+            description: Timestamp when the order containing the item was placed.
             data_tests:
               - date_compare:
                   arguments:
                     date2: current_timestamp()
+          - name: product_name
+            description: Product name captured on the order item record.
+          - name: product_price
+            description: Product selling price captured when the item was ordered.
+          - name: is_food_item
+            description: Boolean indicating whether the product is categorized as food.
+          - name: is_drink_item
+            description: Boolean indicating whether the product is categorized as a drink.
+          - name: supply_cost
+            description: Supply cost attributed to the order item.
 
       - name: orders
+        description: Orders from the numeric-ID order flow, with one row per order and customer links to the customers source.
         columns:
           - name: id
+            description: Primary key for an order in the numeric-ID order flow.
             data_tests:
               - unique
               - not_null
           - name: user_id
+            description: Numeric identifier of the customer who placed the order.
             data_tests:
               - not_null
               - relationships:
@@ -103,44 +149,65 @@ sources:
                     to: source('jaffle_shop', 'customers')
                     field: id
           - name: order_date
+            description: Calendar date on which the order was placed.
             data_tests:
               - date_compare:
                   arguments:
                     date2: current_date()
           - name: status
+            description: Current lifecycle status of the order.
             data_tests:
               - not_null
               - accepted_values:
                   arguments:
                     values: ['completed', 'placed', 'return_pending', 'returned', 'shipped']
+          - name: _etl_loaded_at
+            description: Timestamp when the order record was loaded into the warehouse.
+
 
       - name: products
+        description: Product catalog at one row per SKU, containing product classification, pricing, and descriptive attributes.
         columns:
           - name: sku
+            description: Primary key and stock-keeping unit for a product.
             data_tests:
               - unique
               - not_null
+          - name: name
+            description: Customer-facing product name.
           - name: type
+            description: Product category, currently beverage or jaffle.
             data_tests:
               - not_null
               - accepted_values:
                   arguments:
                     values: ['beverage', 'jaffle']
+          - name: price
+            description: Current catalog selling price of the product.
+          - name: description
+            description: Customer-facing description of the product.
 
       - name: raw_customers
+        description: Customer records for the string-ID order flow, with one row per customer as received from the source system.
         columns:
           - name: id
+            description: Primary key for a customer in the string-ID order flow.
             data_tests:
               - unique
               - not_null
+          - name: name
+            description: Customer's full name as supplied by the source system.
 
       - name: raw_items
+        description: Item records for the string-ID order flow, with one row per item and validated links to raw_orders and raw_products.
         columns:
           - name: id
+            description: Primary key for an item in the string-ID order flow.
             data_tests:
               - unique
               - not_null
           - name: order_id
+            description: Identifier of the raw order containing the item.
             data_tests:
               - not_null
               - relationships:
@@ -148,6 +215,7 @@ sources:
                     to: source('jaffle_shop', 'raw_orders')
                     field: id
           - name: sku
+            description: Product SKU associated with the item.
             data_tests:
               - not_null
               - relationships:
@@ -156,12 +224,15 @@ sources:
                     field: sku
 
       - name: raw_orders
+        description: Orders from the string-ID order flow, with one row per order and precomputed monetary totals.
         columns:
           - name: id
+            description: Primary key for an order in the string-ID order flow.
             data_tests:
               - unique
               - not_null
           - name: customer
+            description: Identifier of the customer who placed the order.
             data_tests:
               - not_null
               - relationships:
@@ -169,49 +240,83 @@ sources:
                     to: source('jaffle_shop', 'raw_customers')
                     field: id
           - name: ordered_at
+            description: Timestamp when the order was placed.
             data_tests:
               - date_compare:
                   arguments:
                     date2: current_timestamp()
           - name: store_id
+            description: Identifier of the store where the order was placed.
             data_tests:
               - not_null
               - relationships:
                   arguments:
                     to: source('jaffle_shop', 'raw_stores')
                     field: id
+          - name: subtotal
+            description: Order amount before tax.
+          - name: tax_paid
+            description: Tax amount charged on the order.
+          - name: order_total
+            description: Final order amount including tax.
+
 
       - name: raw_products
+        description: Source-system product catalog at one row per SKU, used by the string-ID item and supply feeds.
         columns:
           - name: sku
+            description: Primary key and stock-keeping unit for a product.
             data_tests:
               - unique
               - not_null
+          - name: name
+            description: Customer-facing product name.
           - name: type
+            description: Product category, currently beverage or jaffle.
             data_tests:
               - not_null
               - accepted_values:
                   arguments:
                     values: ['beverage', 'jaffle']
+          - name: price
+            description: Current catalog selling price of the product.
+          - name: description
+            description: Customer-facing description of the product.
 
       - name: raw_stores
+        description: Source-system store reference data at one row per store, used by the string-ID order flow.
         columns:
           - name: id
+            description: Primary key for a store.
             data_tests:
               - unique
               - not_null
+          - name: name
+            description: Display name of the store.
           - name: opened_at
+            description: Timestamp when the store opened for business.
             data_tests:
               - date_compare:
                   arguments:
                     date2: current_timestamp()
+          - name: tax_rate
+            description: Tax rate configured for transactions at the store.
 
       - name: raw_supplies
+        description: Source-system mapping of supplies to products at one row per supply and product SKU combination.
         columns:
           - name: id
+            description: Identifier of the supply; repeated when the same supply is used by multiple products.
             data_tests:
               - not_null
+          - name: name
+            description: Descriptive name of the supply.
+          - name: cost
+            description: Unit cost of the supply.
+          - name: perishable
+            description: Boolean indicating whether the supply is perishable.
           - name: sku
+            description: Product SKU that uses the supply; together with id, defines the row grain.
             data_tests:
               - not_null
               - relationships:
@@ -220,23 +325,39 @@ sources:
                     field: sku
 
       - name: stores
+        description: Store reference data at one row per store, including opening timestamp and transaction tax rate.
         columns:
           - name: id
+            description: Primary key for a store.
             data_tests:
               - unique
               - not_null
+          - name: name
+            description: Display name of the store.
           - name: opened_at
+            description: Timestamp when the store opened for business.
             data_tests:
               - date_compare:
                   arguments:
                     date2: current_timestamp()
+          - name: tax_rate
+            description: Tax rate configured for transactions at the store.
 
       - name: supplies
+        description: Mapping of supplies to products at one row per supply and product SKU combination.
         columns:
           - name: id
+            description: Identifier of the supply; repeated when the same supply is used by multiple products.
             data_tests:
               - not_null
+          - name: name
+            description: Descriptive name of the supply.
+          - name: cost
+            description: Unit cost of the supply.
+          - name: perishable
+            description: Boolean indicating whether the supply is perishable.
           - name: sku
+            description: Product SKU that uses the supply; together with id, defines the row grain.
             data_tests:
               - not_null
               - relationships:
