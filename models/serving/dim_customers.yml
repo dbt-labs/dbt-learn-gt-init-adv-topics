@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: >-
+      Customer dimension with one row per Jaffle Shop customer, including
+      lifetime order activity across all order statuses. Customers without
+      orders are retained with a zero order count and null order dates.
+    columns:
+      - name: customer_id
+        description: Primary key for the customer; used to join customer attributes and order activity to other models.
+      - name: customer_first_name
+        description: Customer's first name as provided by the Jaffle Shop application.
+      - name: customer_last_name
+        description: Customer's last name as provided by the Jaffle Shop application.
+      - name: first_order_date
+        description: Earliest date on which the customer placed an order; null when the customer has no orders.
+      - name: most_recent_order_date
+        description: Most recent date on which the customer placed an order; null when the customer has no orders.
+      - name: number_of_orders
+        description: Total number of orders placed by the customer across all order statuses; zero when the customer has no orders.
+      - name: customer_order_rank
+        description: Dense rank of the customer by total order count in descending order, with customers who have the same count sharing a rank.
