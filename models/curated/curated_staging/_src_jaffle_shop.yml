@@ -2,6 +2,7 @@ version: 2
 
 sources:
   - name: jaffle_shop
+    description: All of our source daa for our jaffle shop (sandwiches)
     database: raw
     tables:
       - name: customer_web_activity
@@ -32,3 +33,34 @@ sources:
       - name: raw_supplies
       - name: stores
       - name: supplies
+
+models:
+  - name: stg_jaffle_shop__customers
+    description: >-
+      Standardized customer records from the Jaffle Shop application, with one
+      row per customer. This model renames source fields for consistent use in
+      downstream customer and order analysis without filtering source records.
+    columns:
+      - name: customer_id
+        description: Primary key for the customer, renamed from the source `id`; used to join customers to their orders.
+      - name: customer_first_name
+        description: Customer's first name as provided by the Jaffle Shop application.
+      - name: customer_last_name
+        description: Customer's last name as provided by the Jaffle Shop application.
+
+  - name: stg_jaffle_shop__orders
+    description: >-
+      Standardized order records from the Jaffle Shop application, with one row
+      per order. This model renames source fields for consistent downstream use
+      while retaining the source order date, status, and load timestamp.
+    columns:
+      - name: order_id
+        description: Primary key for the order, renamed from the source `id`.
+      - name: customer_id
+        description: Identifier of the customer who placed the order, renamed from `user_id`; joins to `stg_jaffle_shop__customers.customer_id`.
+      - name: order_date
+        description: Calendar date on which the order was placed, as recorded by the source application.
+      - name: order_status
+        description: Current lifecycle status of the order, renamed from the source `status` field.
+      - name: order_loaded_at
+        description: Timestamp when the order record was loaded by the source ingestion process, renamed from `_etl_loaded_at`.
