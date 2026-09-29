@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: >
+      Customer dimension with one row per customer. Includes customer identity
+      attributes and lifetime order activity. Customers without orders are
+      retained with null order dates and a number_of_orders value of zero.
+    columns:
+      - name: customer_id
+        description: Unique identifier for the customer, sourced from the customer record.
+
+      - name: first_name
+        description: Customer's first name.
+
+      - name: last_name
+        description: Customer's last name.
+
+      - name: first_order_date
+        description: Date of the customer's earliest order; null when the customer has no orders.
+        data_tests:
+          - date_compare:
+              arguments:
+                date2: most_recent_order_date
+
+      - name: most_recent_order_date
+        description: Date of the customer's latest order; null when the customer has no orders.
+
+      - name: number_of_orders
+        description: Total number of orders placed by the customer, including zero.
