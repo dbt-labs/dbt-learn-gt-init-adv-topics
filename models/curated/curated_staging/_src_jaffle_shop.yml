@@ -2,6 +2,7 @@ version: 2
 
 sources:
   - name: jaffle_shop
+    description: All of our source data for our jaffle shop
     database: raw
     tables:
       - name: customer_web_activity
