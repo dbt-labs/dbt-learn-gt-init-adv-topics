@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: ranked_customers
+    description: >
+      One row per customer, ranked by total order count. Customers with the
+      same number of orders share a rank, and ranks do not contain gaps.
+    columns:
+      - name: customer_id
+        description: Unique identifier for the customer.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: first_name
+        description: Customer's first name.
+
+      - name: last_name
+        description: Customer's last name.
+
+      - name: first_order_date
+        description: Date of the customer's first order; null when the customer has no orders.
+
+      - name: most_recent_order_date
+        description: Date of the customer's most recent order; null when the customer has no orders.
+
+      - name: number_of_orders
+        description: Total number of orders placed by the customer, including zero.
+        data_tests:
+          - not_null
+
+      - name: customer_rank
+        description: Gapless descending rank by number of orders; tied customers share a rank.
+        data_tests:
+          - not_null
