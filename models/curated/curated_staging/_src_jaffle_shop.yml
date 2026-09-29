@@ -10,8 +10,14 @@ sources:
         columns:
           - name: id
             data_tests:
-              - unique
-              - not_null
+              - unique:
+                  description: >
+                    Ensures each source customer identifier occurs once. Duplicates
+                    would create multiple staging rows for the same customer.
+              - not_null:
+                  description: >
+                    Ensures every source customer can be identified and joined to
+                    downstream customer records.
       - name: items
       - name: locations
       - name: order_items
@@ -19,11 +25,20 @@ sources:
         columns:
           - name: id
             data_tests:
-              - unique
-              - not_null
+              - unique:
+                  description: >
+                    Ensures each source order identifier occurs once. Duplicates
+                    would overstate order counts in downstream models.
+              - not_null:
+                  description: >
+                    Ensures every source order has an identifier that can be used as
+                    its primary key.
           - name: user_id
             data_tests:
-              - not_null        
+              - not_null:
+                  description: >
+                    Ensures every source order is associated with a customer before
+                    the identifier is renamed in staging.
       - name: products
       - name: raw_customers
       - name: raw_items

@@ -1,0 +1,7 @@
+version: 2
+
+macros:
+  - name: test_date_compare
+    description: >
+      Returns records where the date in the tested column is later than the date in
+      a comparison column. The test passes when no records violate that ordering.

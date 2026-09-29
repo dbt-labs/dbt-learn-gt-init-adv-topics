@@ -2,8 +2,23 @@ version: 2
 
 models:
   - name: stg_jaffle_shop__customers
+    description: >
+      Clean staging view of customer records from the Jaffle Shop source. Each row
+      represents one customer, with the source identifier standardized for use as
+      the customer join key in downstream models.
     columns:
       - name: customer_id
+        description: Primary key for a customer, renamed from the source `id` field.
         data_tests:
-          - unique
-          - not_null
+          - unique:
+              description: >
+                Protects the model's one-row-per-customer grain by detecting
+                duplicate customer identifiers after staging.
+          - not_null:
+              description: >
+                Ensures every staged customer has the join key required by
+                downstream customer models.
+      - name: first_name
+        description: Customer's first name as provided by the source system.
+      - name: last_name
+        description: Customer's last name as provided by the source system.

@@ -2,15 +2,41 @@ version: 2
 
 models:
   - name: stg_jaffle_shop__orders
+    description: >
+      Clean staging view of orders from the Jaffle Shop source. Each row represents
+      one order, with source identifiers standardized and source-provided order
+      attributes retained for downstream customer and order analysis.
     columns:
       - name: order_id
+        description: Primary key for an order, renamed from the source `id` field.
         data_tests:
-          - unique
-          - not_null
+          - unique:
+              description: >
+                Protects the model's one-row-per-order grain by detecting duplicate
+                order identifiers after staging.
+          - not_null:
+              description: >
+                Ensures every staged order has the primary key required for counting
+                and joining orders downstream.
       - name: customer_id
+        description: >
+          Customer associated with the order, renamed from the source `user_id`
+          field and used to join to `stg_jaffle_shop__customers`.
         data_tests:
-          - not_null
+          - not_null:
+              description: >
+                Ensures every staged order is assigned to a customer before customer
+                order metrics are calculated.
           - relationships:
+              description: >
+                Ensures each order's customer identifier resolves to a staged
+                customer, preventing orphaned orders in customer-level models.
               arguments:
                 to: ref('stg_jaffle_shop__customers')
                 field: customer_id
+      - name: order_date
+        description: Date assigned to the order by the source system.
+      - name: status
+        description: Current order status as provided by the source system.
+      - name: _etl_loaded_at
+        description: Timestamp supplied by the source indicating when the order record was loaded.

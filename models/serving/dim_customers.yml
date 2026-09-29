@@ -2,9 +2,37 @@ version: 2
 
 models:
   - name: dim_customers
+    description: >
+      Customer dimension with one row per customer and lifetime order activity
+      derived from staged orders. Customers without orders are retained, receive an
+      order count of zero, and have null first and most-recent order dates.
     columns:
+      - name: customer_id
+        description: Primary key for the customer and join key to customer-level facts.
+      - name: first_name
+        description: Customer's first name as provided by the source system.
+      - name: last_name
+        description: Customer's last name as provided by the source system.
       - name: first_order_date
+        description: >
+          Earliest order date across all staged orders for the customer; null when
+          the customer has no orders.
         data_tests:
           - date_compare:
+              description: >
+                Ensures a customer's first order date is not later than their most
+                recent order date, protecting the chronology of lifetime metrics.
               arguments:
                 date2: most_recent_order_date
+      - name: most_recent_order_date
+        description: >
+          Latest order date across all staged orders for the customer; null when
+          the customer has no orders.
+      - name: number_of_orders
+        description: >
+          Total count of staged orders for the customer across all statuses,
+          defaulted to zero for customers with no orders.
+      - name: customer_order_rank
+        description: >
+          Dense rank of customers by order count in descending order. Customers
+          with the same order count share a rank.
