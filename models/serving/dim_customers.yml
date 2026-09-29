@@ -1,8 +1,22 @@
 models:
   - name: dim_customers
+    description: One row per customer, enriched with lifetime order activity and a dense rank based on total order count. Customers without orders are retained with zero orders and null order dates.
     columns:
+      - name: customer_id
+        description: Primary key for the customer from `stg_jaffle_shop__customers`.
+      - name: first_name
+        description: Customer's first name as recorded in the Jaffle Shop application.
+      - name: last_name
+        description: Customer's last name as recorded in the Jaffle Shop application; values may be abbreviated.
       - name: first_order_date
+        description: Earliest order date across all orders associated with the customer; null when the customer has no orders.
         data_tests:
           - date_compare:
               arguments:
                 date2: most_recent_order_date
+      - name: most_recent_order_date
+        description: Latest order date across all orders associated with the customer; null when the customer has no orders.
+      - name: number_of_orders
+        description: Total number of orders associated with the customer across all order statuses, defaulted to zero for customers without orders.
+      - name: customer_rank
+        description: Customer's dense rank by total order count in descending order; customers with the same order count share a rank.
