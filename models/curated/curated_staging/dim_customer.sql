@@ -1,6 +1,8 @@
+
+
 with source as (
 
-    select * from {{ source('raw_jaffle_shop', 'customers','orders') }}
+    select * from {{ source('raw_jaffle_shop', 'customers') }}
 
 ),
 
@@ -10,10 +12,9 @@ renamed as (
         id as customer_id,
         first_name,
         last_name,
-        email,
-        _elt_updated_at
+       
+    from raw.raw_jaffle_shop.cu ((raw_jaffle_shop__customers))
 
-    from source
 
 )
 
