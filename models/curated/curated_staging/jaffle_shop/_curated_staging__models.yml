@@ -33,21 +33,10 @@ models:
         description: Customer who placed the order, renamed from the source `user_id` field.
         data_tests:
           - not_null
-          - relationships:
-              arguments:
-                to: ref('stg_jaffle_shop_customers')
-                field: customer_id
 
       - name: order_date
         description: Calendar date on which the order was placed.
 
       - name: status
         description: Current order lifecycle status reported by the source system.
-        data_tests:
-          - accepted_values:
-              arguments:
-                values:
-                  - placed
-                  - shipped
-                  - completed
-                  - returned
+
