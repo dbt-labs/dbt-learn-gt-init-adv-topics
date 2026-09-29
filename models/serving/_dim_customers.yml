@@ -2,9 +2,28 @@ version: 2
 
 models:
   - name: dim_customers
+    description: >
+      Customer dimension with one row per staged customer and lifetime order activity.
+      Customers without orders remain in the model with zero orders and null order
+      dates. Order counts include all staged orders regardless of lifecycle status.
     columns:
+      - name: customer_id
+        description: Primary key for the customer, inherited from `stg_jaffle_shop__customers`.
+      - name: first_name
+        description: Customer's given name as provided by the source system.
+      - name: last_name
+        description: Customer's family name as provided by the source system.
       - name: first_order_date
+        description: Earliest staged order date for the customer; null when the customer has no orders.
         data_tests:
           - date_compare:
               arguments:
                 date_2: most_recent_order_date
+      - name: most_recent_order_date
+        description: Latest staged order date for the customer; null when the customer has no orders.
+      - name: number_of_orders
+        description: Count of all staged orders for the customer, defaulted to zero when no orders exist.
+      - name: customer_order_rank
+        description: >
+          Dense rank of customers by order count in descending order. Customers with
+          equal order counts share a rank, and subsequent ranks are not skipped.
