@@ -2,9 +2,33 @@ version: 2
 
 models:
   - name: dim_customers
+    description: >
+      Customer dimension for customer-level analysis. One row per customer, including customers
+      with no orders; order dates are null and order count is zero for those customers.
     columns:
+      - name: customer_id
+        description: Unique identifier for the customer and the grain of this model.
+
+      - name: first_name
+        description: Customer's given name from the staged customer record.
+
+      - name: last_name
+        description: Customer's family name from the staged customer record.
+
+      - name: first_order_date
+        description: Earliest order date for the customer; null when the customer has no orders.
+
       - name: most_recent_order_date
+        description: Latest order date for the customer; null when the customer has no orders.
         data_tests:
           - date_compare:
               arguments:
                 date2: first_order_date
+
+      - name: number_of_orders
+        description: Count of orders placed by the customer, set to zero when no orders exist.
+
+      - name: customer_rank
+        description: >
+          Dense rank of the customer by order count in descending order. Customers with the same
+          order count share a rank, and subsequent ranks are not skipped.
