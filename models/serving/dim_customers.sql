@@ -1,23 +1,23 @@
 with customers as (
 
     select
-        id as customer_id,
-        first_name,
-        last_name
+        customer_id,
+        customer_first_name,
+        customer_last_name
 
-    from raw.jaffle_shop.customers
+    from {{ ref('stg_jaffle_shop__customers') }}
 
 ),
 
 orders as (
 
     select
-        id as order_id,
-        user_id as customer_id,
+        order_id,
+        customer_id,
         order_date,
-        status
+        order_status
 
-    from raw.jaffle_shop.orders
+    from {{ ref('stg_jaffle_shop__orders') }}
 
 ),
 
@@ -36,13 +36,12 @@ customer_orders as (
 
 ),
 
-
-final as (
+customer_order_metrics as (
 
     select
         customers.customer_id,
-        customers.first_name,
-        customers.last_name,
+        customers.customer_first_name,
+        customers.customer_last_name,
         customer_orders.first_order_date,
         customer_orders.most_recent_order_date,
         coalesce(customer_orders.number_of_orders, 0) as number_of_orders
@@ -50,6 +49,18 @@ final as (
     from customers
 
     left join customer_orders using (customer_id)
+
+),
+
+final as (
+
+    select
+        *,
+        dense_rank() over (
+            order by number_of_orders desc
+        ) as customer_order_rank
+
+    from customer_order_metrics
 
 )
 
