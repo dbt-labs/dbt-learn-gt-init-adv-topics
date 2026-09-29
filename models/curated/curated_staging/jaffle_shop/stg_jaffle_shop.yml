@@ -1,19 +1,27 @@
-
 models:
   - name: stg_jaffle_shop__customers
+    description: One row per customer from the Jaffle Shop application, with source identifiers and names standardized for downstream customer analytics.
     columns:
       - name: customer_id
+        description: Primary key for the customer, renamed from the source `id` field.
         data_tests:
           - unique
           - not_null
+      - name: first_name
+        description: Customer's first name as recorded in the source application.
+      - name: last_name
+        description: Customer's last name as recorded in the source application; values may be abbreviated.
 
   - name: stg_jaffle_shop__orders
+    description: One row per order from the Jaffle Shop application, standardized for order and customer-level analysis without filtering source records.
     columns:
       - name: order_id
+        description: Primary key for the order, renamed from the source `id` field.
         data_tests:
           - unique
           - not_null
       - name: customer_id
+        description: Customer who placed the order, renamed from the source `user_id` field and linked to `stg_jaffle_shop__customers`.
         data_tests:
           - not_null
           - relationships:
@@ -21,11 +29,15 @@ models:
                 to: ref('stg_jaffle_shop__customers')
                 field: customer_id
       - name: order_date
+        description: Calendar date on which the order was placed.
         data_tests:
           - not_null
       - name: status
+        description: Current order lifecycle status supplied by the Jaffle Shop application.
         data_tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['completed', 'placed', 'return_pending', 'returned', 'shipped']
+      - name: _etl_loaded_at
+        description: Timestamp when the source order record was loaded by the upstream ingestion process.
