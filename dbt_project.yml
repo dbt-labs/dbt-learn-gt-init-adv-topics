@@ -36,6 +36,11 @@ vars:
 
 models:
   jaffle_shop:
-    +materialized: view
-
+    curated:
+      curated_stging:
+        +materialized: view
+      curated_final:
+        +materialized: view
+    serving:
+        +materialized: view
     
