@@ -58,7 +58,7 @@ ranked as (
         *,
         dense_rank() over (order by number_of_orders desc) as customer_rank
 
-    from final
+    from customer_summary
 
 )
 
