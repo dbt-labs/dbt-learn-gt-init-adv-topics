@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: stg_jaffle_shop__customers
+    description: "Staged customer records from Jaffle Shop."
+    columns:
+      - name: customer_id
+        description: "Unique identifier for a customer."
+        data_tests:
+          - unique
+          - not_null
