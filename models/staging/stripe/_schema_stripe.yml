@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: stg_stripe__payment
+    description: >-
+      One row per Stripe payment record, including unsuccessful payments.
+      Converts source amount from cents to USD with numeric(16, 2) precision.
+      Orders may have multiple payment records.
+    columns:
+      - name: amount_usd
+        data_type: number
+        description: Payment amount in USD, calculated as source amount divided by 100 and cast to numeric(16, 2); only successful payments contribute to the order mart.
+        data_tests:
+          - not_null
+      - name: created
+        data_type: date
+        description: Source payment creation date; distinct from the shop order date and batch ingestion time.
+        data_tests:
+          - not_null
+      - name: payment_id
+        data_type: number
+        description: Source payment identifier, renamed from id; identifies an individual payment record rather than an order.
+        data_tests:
+          - unique
+          - not_null
+      - name: order_id
+        data_type: number
+        description: Shop order associated with this payment, renamed from orderid; may repeat when an order has multiple payments.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop__orders')
+                field: order_id
+      - name: payment_method
+        data_type: varchar
+        description: Payment method reported by Stripe, renamed from paymentmethod without recategorization.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [credit_card, coupon, bank_transfer, gift_card]
+      - name: status
+        data_type: varchar
+        description: Source payment outcome; the order mart includes amount_usd only when this value is success.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [success, fail]
+
+      - name: _batched_at
+        data_type: timestamp_ltz
+        description: Timestamp when the source payment record was batched for ingestion; not the payment creation date.
+        data_tests:
+          - not_null

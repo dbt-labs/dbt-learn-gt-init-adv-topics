@@ -1,0 +1,151 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: >-
+      One row per shop customer, including customers with no orders. Summarizes
+      all orders regardless of order status and their successful Stripe payment
+      amounts. Customers without orders have zero orders and null order dates
+      and lifetime value.
+    columns:
+      - name: customer_id
+        data_type: number
+        description: Shop customer identifier; the primary key at the customer grain.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop__customers')
+                field: customer_id
+      - name: first_name
+        data_type: varchar
+        description: Customer's first name passed through from the staged customer record.
+      - name: last_name
+        data_type: varchar
+        description: Customer's last name passed through from the staged customer record.
+      - name: first_order_date
+        data_type: date
+        description: Earliest order_date across the customer's orders, including returns; null when the customer has no orders.
+      - name: most_recent_order_date
+        data_type: date
+        description: Latest order_date across the customer's orders, including returns; null when the customer has no orders.
+      - name: number_of_orders
+        data_type: number
+        description: Count of the customer's order identifiers across all statuses; coalesced to zero for customers without orders.
+        data_tests:
+          - not_null
+      - name: lifetime_value
+        data_type: number
+        description: Sum of successful Stripe payment amounts in USD across the customer's orders; null for customers without orders, and zero for orders without successful payments. No separate refund adjustment is applied.
+
+  - name: fct_orders
+    description: >-
+      One row per shop order with the sum of its successful Stripe payments in
+      USD. Retains every shop order regardless of status, including orders
+      without payments, whose amount is zero.
+    columns:
+      - name: order_id
+        data_type: number
+        description: Shop order identifier; the primary key after aggregating multiple payment records per order.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop__orders')
+                field: order_id
+      - name: customer_id
+        data_type: number
+        description: Customer who placed the order, passed through from staged orders.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop__customers')
+                field: customer_id
+      - name: order_date
+        data_type: date
+        description: Shop order placement date; used in customer-level first and most recent order calculations.
+      - name: amount_usd
+        data_type: number
+        description: Sum of amount_usd for payment records with status success; coalesced to zero when no successful payment amount exists. Order status does not filter this measure.
+        data_tests:
+          - not_null
+
+  - name: fct_page_views
+    description: >-
+      One row per staged page_view event, enriched with aggregates over all
+      events sharing page_view_id. This model does not deduplicate page-view
+      events. Estimated time is the event count multiplied by 10, not measured
+      elapsed time; aggregates include page-view events as well as other events.
+    columns:
+      - name: page_view_id
+        data_type: varchar
+        description: Tracking identifier used to join all-event aggregates to each page_view event; uniqueness is not enforced by the SQL.
+      - name: event_id
+        data_type: varchar
+        description: Identifier of the underlying page_view event; the event-level key of this mart.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_snowplow__events')
+                field: event_id
+      - name: anonymous_user_id
+        data_type: varchar
+        description: Anonymous visitor identifier from the page_view event; no join to shop customer_id is defined.
+      - name: session_id
+        data_type: varchar
+        description: Tracking session identifier attached to the page_view event; sessions may span multiple page views.
+      - name: event
+        data_type: varchar
+        description: Source event type, restricted by this model to page_view.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [page_view]
+      - name: device_type
+        data_type: varchar
+        description: Device classification reported by the underlying page_view event.
+      - name: page_url
+        data_type: varchar
+        description: Full tracked URL for the page_view event, passed through without normalization.
+      - name: page_title
+        data_type: varchar
+        description: Page title captured on the page_view event; may be absent when not supplied by tracking.
+      - name: page_urlscheme
+        data_type: varchar
+        description: Scheme component of the tracked page URL, such as http or https.
+      - name: page_urlhost
+        data_type: varchar
+        description: Hostname component of the tracked page URL.
+      - name: page_urlport
+        data_type: number
+        description: Port component of the tracked page URL; may be absent when not explicitly recorded.
+      - name: page_urlpath
+        data_type: varchar
+        description: Path component of the tracked page URL, excluding query string and fragment.
+      - name: page_urlquery
+        data_type: varchar
+        description: Query-string component of the tracked page URL; may be absent for URLs without parameters.
+      - name: page_urlfragment
+        data_type: varchar
+        description: Fragment component of the tracked page URL; may be absent for URLs without a fragment.
+      - name: collector_tstamp
+        data_type: timestamp_ntz
+        description: Collector timestamp for the individual page_view event, not the latest timestamp across its related events.
+      - name: derived_tstamp
+        data_type: timestamp_ntz
+        description: Source-derived event timestamp for the individual page_view event, passed through without recalculation.
+      - name: approx_time_on_page
+        data_type: number
+        description: Estimated seconds calculated as 10 times the count of all staged events sharing page_view_id, including the page_view event; not an elapsed-time measurement. Null if no aggregate joins.
+      - name: page_view_start
+        data_type: timestamp_ntz
+        description: Minimum derived_tstamp across all staged events sharing page_view_id; not necessarily the timestamp of the page_view event itself. Null if no aggregate joins.
+      - name: max_collector_tstamp
+        data_type: timestamp_ntz
+        description: Latest collector_tstamp across all staged events sharing page_view_id; null if no aggregate joins.
