@@ -1,0 +1,136 @@
+version: 2
+
+models:
+  - name: fct_orders
+    description: One row per Jaffle Shop order, enriched with the sum of successful Stripe payment amounts in USD; orders without successful payments have zero amount.
+    columns:
+      - name: order_id
+        data_type: number
+        description: Source order identifier; remains unique after payment attempts are aggregated and joined.
+        data_tests:
+          - unique
+          - not_null
+      - name: customer_id
+        data_type: number
+        description: Identifier of the customer who placed the order.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_id
+      - name: order_date
+        data_type: date
+        description: Order date from Jaffle Shop; used to calculate first and most recent customer order dates.
+      - name: amount_usd
+        data_type: number
+        description: Sum of payment amounts with status success for the order, defaulting to zero when no successful payment amount exists; no adjustment based on order status is applied.
+        data_tests:
+          - not_null
+
+  - name: dim_customers
+    description: One row per Jaffle Shop customer, including customers without orders, with lifetime order counts and successful-payment totals.
+    columns:
+      - name: customer_id
+        data_type: number
+        description: Source customer identifier; remains unique after the left join to customer-level order summaries.
+        data_tests:
+          - unique
+          - not_null
+      - name: first_name
+        data_type: varchar
+        description: Customer given name passed through from the staging customer model.
+      - name: last_name
+        data_type: varchar
+        description: Customer family name passed through from the staging customer model.
+      - name: first_order_date
+        data_type: date
+        description: Earliest order date across all customer orders, regardless of payment outcome; null for customers without orders.
+      - name: most_recent_order_date
+        data_type: date
+        description: Latest order date across all customer orders, regardless of payment outcome; null for customers without orders.
+      - name: number_of_orders
+        data_type: number
+        description: Count of customer orders across all statuses, defaulting to zero for customers without orders.
+        data_tests:
+          - not_null
+      - name: lifetime_value
+        data_type: number
+        description: Sum of fct_orders.amount_usd across customer orders, in USD; null for customers without orders and zero for customers whose orders have no successful payment amount.
+
+  - name: fct_page_views
+    description: One row per source event with event type page_view, enriched with activity aggregated across all events sharing its page_view_id; page_view_id is not deduplicated by this model.
+    columns:
+      - name: page_view_id
+        data_type: varchar
+        description: Identifier used to join the page-view event to activity across all matching events; not guaranteed unique by the transformation.
+        data_tests:
+          - not_null
+      - name: event_id
+        data_type: varchar
+        description: Identifier of the source page_view event; the row key retained after the aggregate join.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_snowplow__events')
+                field: event_id
+      - name: anonymous_user_id
+        data_type: varchar
+        description: Anonymous visitor identifier from the original page_view event; not mapped to a customer account.
+      - name: session_id
+        data_type: varchar
+        description: Tracking session identifier from the original page_view event.
+      - name: event
+        data_type: varchar
+        description: Source event type, filtered to page_view by this model.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [page_view]
+      - name: device_type
+        data_type: varchar
+        description: Device category captured on the original page_view event.
+      - name: page_url
+        data_type: varchar
+        description: Full URL captured on the original page_view event.
+      - name: page_title
+        data_type: varchar
+        description: Page title captured on the original page_view event.
+      - name: page_urlscheme
+        data_type: varchar
+        description: URL scheme from the original page_view event.
+      - name: page_urlhost
+        data_type: varchar
+        description: URL host from the original page_view event.
+      - name: page_urlport
+        data_type: number
+        description: Explicit URL port from the original page_view event; may be absent.
+      - name: page_urlpath
+        data_type: varchar
+        description: URL path from the original page_view event, excluding query string and fragment.
+      - name: page_urlquery
+        data_type: varchar
+        description: URL query string from the original page_view event; may be absent.
+      - name: page_urlfragment
+        data_type: varchar
+        description: URL fragment from the original page_view event; may be absent.
+      - name: collector_tstamp
+        data_type: timestamp_ntz
+        description: Collector timestamp of the original page_view event, rather than the latest collector timestamp for the page.
+      - name: derived_tstamp
+        data_type: timestamp_ntz
+        description: Derived timestamp of the original page_view event, rather than the earliest event timestamp for the page.
+      - name: approx_time_on_page
+        data_type: number
+        description: Activity-based page-duration proxy calculated as the count of all events sharing page_view_id multiplied by 10; includes page views and other event types, and does not calculate elapsed time from timestamps or establish the time unit.
+
+        data_tests:
+          - not_null
+      - name: page_view_start
+        data_type: timestamp_ntz
+        description: Minimum derived_tstamp across all events sharing page_view_id, not only page_view events.
+      - name: max_collector_tstamp
+        data_type: timestamp_ntz
+        description: Maximum collector_tstamp across all events sharing page_view_id; indicates the latest collected activity for that page.

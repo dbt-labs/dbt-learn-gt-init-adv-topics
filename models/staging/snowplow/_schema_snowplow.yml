@@ -1,0 +1,54 @@
+version: 2
+
+models:
+  - name: stg_snowplow__events
+    description: One row per Snowplow event, retaining page context and event timestamps without filtering event types.
+    columns:
+      - name: event_id
+        data_type: varchar
+        description: Source identifier for an individual tracked event.
+      - name: page_view_id
+        data_type: varchar
+        description: Identifier linking events associated with the same page view; used to aggregate page activity.
+      - name: anonymous_user_id
+        data_type: varchar
+        description: Anonymous visitor identifier supplied by tracking; this model does not link it to Jaffle Shop customer_id.
+      - name: session_id
+        data_type: varchar
+        description: Tracking session identifier supplied by Snowplow; sessions can contain multiple events and page views.
+      - name: event
+        data_type: varchar
+        description: Source event type; the literal page_view is selected by the page-view fact model.
+      - name: device_type
+        data_type: varchar
+        description: Device category supplied by the event source, without additional classification.
+      - name: page_url
+        data_type: varchar
+        description: Full tracked page URL, including any source-supplied query string and fragment.
+      - name: page_title
+        data_type: varchar
+        description: Page title captured with the event.
+      - name: page_urlscheme
+        data_type: varchar
+        description: URL scheme component supplied by the source, such as the transport protocol.
+      - name: page_urlhost
+        data_type: varchar
+        description: Host component of the tracked page URL.
+      - name: page_urlport
+        data_type: number
+        description: Explicit port component of the tracked URL; may be absent when no port is specified.
+      - name: page_urlpath
+        data_type: varchar
+        description: Path component of the tracked URL, excluding its query string and fragment.
+      - name: page_urlquery
+        data_type: varchar
+        description: Query-string component supplied by the source; may be absent for URLs without parameters.
+      - name: page_urlfragment
+        data_type: varchar
+        description: Fragment component supplied by the source; may be absent for URLs without a fragment.
+      - name: collector_tstamp
+        data_type: timestamp_ntz
+        description: Collector timestamp supplied by Snowplow; retained without timezone conversion.
+      - name: derived_tstamp
+        data_type: timestamp_ntz
+        description: Derived event timestamp supplied by Snowplow; its minimum determines page_view_start in the fact model.
