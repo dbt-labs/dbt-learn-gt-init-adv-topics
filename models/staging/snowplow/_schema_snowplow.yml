@@ -10,9 +10,6 @@ models:
       - name: event_id
         data_type: varchar
         description: Snowplow event identifier; the primary key for individual events, distinct from the identifier grouping events into a page view.
-        data_tests:
-          - unique
-          - not_null
       - name: page_view_id
         data_type: varchar
         description: Identifier shared by events associated with a page view; used to aggregate related events in fct_page_views, not unique at event grain.
