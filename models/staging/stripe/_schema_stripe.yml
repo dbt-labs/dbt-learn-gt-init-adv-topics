@@ -1,0 +1,52 @@
+version: 2
+
+models:
+  - name: stg_stripe__payment
+    description: One row per Stripe payment record, including successful and failed payments, with source amounts converted from cents to USD.
+    columns:
+      - name: amount_usd
+        data_type: number
+        description: Payment amount in US dollars, calculated by dividing the source amount in cents by 100 and casting to numeric(16, 2); populated for both successful and failed payments.
+        data_tests:
+          - not_null
+      - name: created
+        data_type: date
+        description: Date the payment record was created in Stripe; not necessarily the order date.
+        data_tests:
+          - not_null
+      - name: payment_id
+        data_type: number
+        description: Payment record identifier from the source id; unique per payment, while an order can have multiple payments.
+        data_tests:
+          - unique
+          - not_null
+      - name: order_id
+        data_type: number
+        description: Jaffle Shop order associated with the payment, renamed from the source orderid.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop__orders')
+                field: order_id
+      - name: payment_method
+        data_type: varchar
+        description: Method used for the payment, including credit cards, bank transfers, gift cards, and coupons.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['credit_card', 'bank_transfer', 'gift_card', 'coupon']
+      - name: status
+        data_type: varchar
+        description: Payment outcome; only records with status success contribute to paid order amounts in fct_orders.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['success', 'fail']
+      - name: _batched_at
+        data_type: timestamp_ltz
+        description: Timestamp when the payment record was batched by the ingestion process; not the payment creation date.
+        data_tests:
+          - not_null

@@ -1,0 +1,152 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: >-
+      One row per Jaffle Shop customer, including customers who have never ordered.
+      Summarizes all orders regardless of order status; lifetime value sums successful
+      payments and does not independently subtract returns or refunds.
+    data_tests:
+      - dbt_utils.expression_is_true:
+          name: customer_order_summary_is_consistent
+          description: Customers without orders must have null order dates and lifetime value; customers with orders must have ordered dates and a populated value. Investigate fct_orders and its customer join for failures.
+          arguments:
+            expression: >-
+              (number_of_orders = 0 and first_order_date is null
+               and most_recent_order_date is null and lifetime_value is null)
+              or (number_of_orders > 0 and first_order_date is not null
+                  and most_recent_order_date is not null and lifetime_value is not null
+                  and first_order_date <= most_recent_order_date)
+    columns:
+      - name: customer_id
+        data_type: number
+        description: Customer identifier from stg_jaffle_shop__customers; one row is retained for every customer, even without orders.
+        data_tests:
+          - unique
+          - not_null
+      - name: first_name
+        data_type: varchar
+        description: Customer's given name, passed through from the customer staging model.
+      - name: last_name
+        data_type: varchar
+        description: Customer's family name, passed through from the customer staging model.
+      - name: first_order_date
+        data_type: date
+        description: Earliest order_date across all of the customer's orders; null when the customer has no orders.
+      - name: most_recent_order_date
+        data_type: date
+        description: Latest order_date across all of the customer's orders; null when the customer has no orders.
+      - name: number_of_orders
+        data_type: number
+        description: Count of the customer's orders across all statuses; zero for customers with no orders.
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+      - name: lifetime_value
+        data_type: number
+        description: Sum of fct_orders.amount_usd in US dollars across all customer orders. Counts successful payments only, with no independent refund adjustment; null for customers without orders.
+
+  - name: fct_orders
+    description: >-
+      One row per Jaffle Shop order, enriched with the sum of successful Stripe payments
+      in US dollars. Includes every order status and retains orders with no successful payments.
+    columns:
+      - name: order_id
+        data_type: number
+        description: Order identifier from the order staging model; remains unique after joining aggregated payments.
+        data_tests:
+          - unique
+          - not_null
+      - name: customer_id
+        data_type: number
+        description: Customer who placed the order, passed through unchanged from stg_jaffle_shop__orders.
+      - name: order_date
+        data_type: date
+        description: Date the order was placed, passed through from stg_jaffle_shop__orders.
+      - name: amount_usd
+        data_type: number
+        description: Sum of Stripe payment amounts in US dollars where status is success; zero when no successful payment amount is available. Order status does not filter this amount.
+        data_tests:
+          - not_null
+
+  - name: fct_page_views
+    description: >-
+      One row per event with event = 'page_view', enriched with aggregates across all
+      event types sharing its page_view_id. Event_id identifies the row; the SQL does
+      not deduplicate page_view_id. Null page_view_id values do not match the aggregate
+      in the left join, so enrichment fields can be null.
+    columns:
+      - name: page_view_id
+        data_type: varchar
+        description: Identifier grouping events for a page view; used to join all-event aggregates. Multiple page-view events can share it, and null values do not match the aggregate join.
+      - name: event_id
+        data_type: varchar
+        description: Identifier of the originating page_view event; the row key retained after enrichment.
+        data_tests:
+          - unique
+          - not_null
+      - name: anonymous_user_id
+        data_type: varchar
+        description: Anonymous visitor identifier attached to the originating page-view event; not a Jaffle Shop customer identifier.
+      - name: session_id
+        data_type: varchar
+        description: Browser session identifier attached to the originating page-view event.
+      - name: event
+        data_type: varchar
+        description: Event type from the source; this model retains only page_view events.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['page_view']
+      - name: device_type
+        data_type: varchar
+        description: Device classification reported on the originating page-view event.
+      - name: page_url
+        data_type: varchar
+        description: Full URL reported on the originating page-view event.
+      - name: page_title
+        data_type: varchar
+        description: Page title reported on the originating page-view event.
+      - name: page_urlscheme
+        data_type: varchar
+        description: Scheme component of the originating page-view URL, such as https.
+      - name: page_urlhost
+        data_type: varchar
+        description: Host component of the originating page-view URL.
+      - name: page_urlport
+        data_type: number
+        description: Port component of the originating page-view URL; may be absent when not supplied by the source.
+      - name: page_urlpath
+        data_type: varchar
+        description: Path component of the originating page-view URL, separate from its query string and fragment.
+      - name: page_urlquery
+        data_type: varchar
+        description: Query-string component of the originating page-view URL; may be null for URLs without a query string.
+      - name: page_urlfragment
+        data_type: varchar
+        description: Fragment component of the originating page-view URL; may be null for URLs without a fragment.
+      - name: collector_tstamp
+        data_type: timestamp_ntz
+        description: Collector timestamp for the originating page-view event; distinct from max_collector_tstamp across its related events.
+      - name: derived_tstamp
+        data_type: timestamp_ntz
+        description: Derived event timestamp for the originating page-view event, passed through from Snowplow.
+      - name: approx_time_on_page
+        data_type: number
+        description: Estimated seconds on page, calculated as 10 times the count of all events sharing the page_view_id, including the page_view event. This is an event-count proxy, not elapsed timestamp duration; null when the aggregate join has no match.
+        data_tests:
+          - not_null:
+              config:
+                where: "page_view_id is not null"
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 10
+      - name: page_view_start
+        data_type: timestamp_ntz
+        description: Minimum derived_tstamp across all event types sharing the page_view_id; may precede this row's page-view event and is null when no non-null timestamp matches.
+      - name: max_collector_tstamp
+        data_type: timestamp_ntz
+        description: Maximum collector_tstamp across all event types sharing the page_view_id; null when no non-null timestamp matches.

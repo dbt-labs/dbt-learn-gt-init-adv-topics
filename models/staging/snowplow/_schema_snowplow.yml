@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  - name: stg_snowplow__events
+    description: >-
+      One row per Snowplow event, preserving all event types and the source's visitor,
+      session, page, and timestamp fields. Feeds page-view reporting; no filtering or
+      deduplication is performed here.
+    columns:
+      - name: event_id
+        data_type: varchar
+        description: Snowplow event identifier; the primary key for individual events, distinct from the identifier grouping events into a page view.
+        data_tests:
+          - unique
+          - not_null
+      - name: page_view_id
+        data_type: varchar
+        description: Identifier shared by events associated with a page view; used to aggregate related events in fct_page_views, not unique at event grain.
+      - name: anonymous_user_id
+        data_type: varchar
+        description: Anonymous visitor identifier supplied by Snowplow; no mapping to Jaffle Shop customer_id is defined in this model.
+      - name: session_id
+        data_type: varchar
+        description: Identifier grouping events into a browsing session, as supplied by Snowplow.
+      - name: event
+        data_type: varchar
+        description: Source event type; fct_page_views filters this field to page_view while its activity aggregates use all event types.
+        data_tests:
+          - not_null
+      - name: device_type
+        data_type: varchar
+        description: Device classification reported by Snowplow for the event.
+      - name: page_url
+        data_type: varchar
+        description: Full page URL recorded for the event, before splitting into the separately supplied URL components.
+      - name: page_title
+        data_type: varchar
+        description: Title of the page on which the event was recorded.
+      - name: page_urlscheme
+        data_type: varchar
+        description: Scheme component of the event's page URL, such as https.
+      - name: page_urlhost
+        data_type: varchar
+        description: Host component of the event's page URL.
+      - name: page_urlport
+        data_type: number
+        description: Port component of the event's page URL; may be absent when not supplied by the source.
+      - name: page_urlpath
+        data_type: varchar
+        description: Path component of the event's page URL, separate from its query string and fragment.
+      - name: page_urlquery
+        data_type: varchar
+        description: Query-string component of the event's page URL; may be null for URLs without a query string.
+      - name: page_urlfragment
+        data_type: varchar
+        description: Fragment component of the event's page URL; may be null for URLs without a fragment.
+      - name: collector_tstamp
+        data_type: timestamp_ntz
+        description: Timestamp recorded by the Snowplow collector for the event; used to find the latest collected event per page_view_id.
+      - name: derived_tstamp
+        data_type: timestamp_ntz
+        description: Derived event timestamp supplied by Snowplow; its minimum across a page_view_id defines page_view_start in the page-view mart.
