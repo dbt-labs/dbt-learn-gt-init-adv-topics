@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: stg_snowplow__events
+    description: One row per source Snowplow event, retaining page views and other event types for page-level activity aggregation. No deduplication or URL normalization is applied.
+    columns:
+      - name: event_id
+        data_type: varchar
+        description: Source event identifier; the event-grain key, distinct from the page view shared by related events.
+      - name: page_view_id
+        data_type: varchar
+        description: Page-view context identifier used to group related events when estimating time on page. It is not an event-level unique key.
+      - name: anonymous_user_id
+        data_type: varchar
+        description: Anonymous visitor identifier supplied by the tracker; no mapping to commerce customer_id is defined in this project.
+      - name: session_id
+        data_type: varchar
+        description: Tracker-provided session identifier linking events within a browsing session.
+      - name: event
+        data_type: varchar
+        description: Source event type. The page-view mart retains only page_view rows, while its activity aggregates use all event types.
+        data_tests:
+          - not_null
+      - name: device_type
+        data_type: varchar
+        description: Device category reported with the event, retained as supplied by the source.
+      - name: page_url
+        data_type: varchar
+        description: Full page URL associated with the event; may contain query parameters and fragments.
+      - name: page_title
+        data_type: varchar
+        description: Page title reported by the tracker at the time of the event.
+      - name: page_urlscheme
+        data_type: varchar
+        description: Source-parsed URL scheme, such as https; no additional parsing occurs in staging.
+      - name: page_urlhost
+        data_type: varchar
+        description: Source-parsed host component of the page URL.
+      - name: page_urlport
+        data_type: number
+        description: Source-parsed URL port. May be absent when the source does not provide an explicit port.
+      - name: page_urlpath
+        data_type: varchar
+        description: Source-parsed path component of the page URL, excluding query parameters and fragment.
+      - name: page_urlquery
+        data_type: varchar
+        description: Source-parsed query component of the page URL; may be absent for URLs without a query string.
+      - name: page_urlfragment
+        data_type: varchar
+        description: Source-parsed fragment component of the page URL; may be absent for URLs without a fragment.
+      - name: collector_tstamp
+        data_type: timestamp_ntz
+        description: Source collector timestamp for the event; used to identify the most recent collected activity per page view.
+      - name: derived_tstamp
+        data_type: timestamp_ntz
+        description: Source-derived event timestamp; its minimum across a page view's events supplies page_view_start.
