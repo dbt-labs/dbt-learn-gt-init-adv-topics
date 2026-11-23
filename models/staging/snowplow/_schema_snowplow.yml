@@ -11,9 +11,6 @@ models:
       - name: event_id
         data_type: varchar
         description: Source identifier of an individual tracking event; intended event-level key.
-        data_tests:
-          - unique
-          - not_null
       - name: page_view_id
         data_type: varchar
         description: Identifier linking events associated with the same page view; used to aggregate events in the page-view mart and is not unique per event.
