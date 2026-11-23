@@ -1,0 +1,57 @@
+version: 2
+
+models:
+  - name: stg_snowplow__events
+    description: One row per Snowplow event, retaining page, visitor, session, and timing attributes; includes page views and other event types.
+    columns:
+      - name: event_id
+        data_type: varchar
+        description: Identifier of an individual tracked event; identifies events independently of their shared page_view_id.
+        # data_tests:
+        #   - unique
+        #   - not_null
+      - name: page_view_id
+        data_type: varchar
+        description: Identifier grouping events associated with the same page view; used to aggregate engagement in fct_page_views.
+      - name: anonymous_user_id
+        data_type: varchar
+        description: Anonymous visitor identifier reported by the tracker; not a Jaffle Shop customer identifier.
+      - name: session_id
+        data_type: varchar
+        description: Tracker-assigned session identifier grouping a visitor's events into a browsing session.
+      - name: event
+        data_type: varchar
+        description: Tracked event type; fct_page_views retains records with the value page_view.
+      - name: device_type
+        data_type: varchar
+        description: Device classification reported with the event, passed through without normalization.
+      - name: page_url
+        data_type: varchar
+        description: Full URL of the page on which the event occurred, including any supplied query and fragment components.
+      - name: page_title
+        data_type: varchar
+        description: Page title captured by the tracker when the event occurred.
+      - name: page_urlscheme
+        data_type: varchar
+        description: URL protocol component supplied by Snowplow, such as the page's HTTP scheme.
+      - name: page_urlhost
+        data_type: varchar
+        description: Host component of the tracked page URL.
+      - name: page_urlport
+        data_type: number
+        description: Port component of the tracked page URL when supplied by the source.
+      - name: page_urlpath
+        data_type: varchar
+        description: Path component of the tracked page URL, separate from query parameters and fragments.
+      - name: page_urlquery
+        data_type: varchar
+        description: Query-string component of the tracked URL; may be absent when the URL has no query parameters.
+      - name: page_urlfragment
+        data_type: varchar
+        description: Fragment component of the tracked URL; may be absent when the URL has no fragment.
+      - name: collector_tstamp
+        data_type: timestamp_ntz
+        description: Time the event was received by the Snowplow collector; used to determine the latest collected event for a page view.
+      - name: derived_tstamp
+        data_type: timestamp_ntz
+        description: Source-derived event timestamp; the earliest value across a page view's events becomes page_view_start.
