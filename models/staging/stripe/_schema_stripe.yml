@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: stg_stripe__payment
+    description: >-
+      One row per source payment attempt, including unsuccessful attempts.
+      Renames identifiers and converts the source amount from cents to US dollars.
+      Downstream order revenue uses only payments with status success.
+    columns:
+      - name: amount_usd
+        data_type: number
+        description: Payment-attempt amount in USD, calculated as source amount divided by 100 and cast to numeric(16, 2); includes all payment statuses.
+      - name: created
+        data_type: date
+        description: Source payment creation date, passed through without timezone conversion.
+      - name: payment_id
+        data_type: number
+        description: Source payment-attempt id, renamed from id; primary key, distinct from the order identifier.
+        data_tests:
+          - unique
+          - not_null
+      - name: order_id
+        data_type: number
+        description: Order associated with the payment attempt, renamed from orderid; multiple attempts may reference one order.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop__orders')
+                field: order_id
+      - name: payment_method
+        data_type: varchar
+        description: Source payment-method category, renamed from paymentmethod without recategorization.
+      - name: status
+        data_type: varchar
+        description: Source outcome of the payment attempt; only success contributes to fct_orders.amount_usd.
+      - name: _batched_at
+        data_type: timestamp_ltz
+        description: Source ingestion batch timestamp, retained to investigate payment data arrival.

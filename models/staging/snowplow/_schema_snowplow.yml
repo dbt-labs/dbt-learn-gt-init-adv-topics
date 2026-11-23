@@ -1,0 +1,59 @@
+version: 2
+
+models:
+  - name: stg_snowplow__events
+    description: >-
+      One row per source Snowplow event, retaining all event types and URL components.
+      Supplies page-view records and the events used to estimate time on page.
+    columns:
+      - name: event_id
+        data_type: varchar
+        description: Identifier of an individual tracked event; primary key across event types.
+        data_tests:
+          - unique
+          - not_null
+      - name: page_view_id
+        data_type: varchar
+        description: Identifier grouping events belonging to the same page view; may repeat across events.
+      - name: anonymous_user_id
+        data_type: varchar
+        description: Tracking identifier for an anonymous visitor; does not join to the shop customer_id.
+      - name: session_id
+        data_type: varchar
+        description: Source tracking session identifier grouping a visitor's events.
+      - name: event
+        data_type: varchar
+        description: Source event type; fct_page_views retains records with the exact value page_view.
+      - name: device_type
+        data_type: varchar
+        description: Device category supplied by the event tracker, without reclassification.
+      - name: page_url
+        data_type: varchar
+        description: Full tracked page URL, including any query string or fragment supplied by the source.
+      - name: page_title
+        data_type: varchar
+        description: Page title captured with the event; may vary between events on the same URL.
+      - name: page_urlscheme
+        data_type: varchar
+        description: Scheme component of the tracked page URL, such as https, as provided by the source.
+      - name: page_urlhost
+        data_type: varchar
+        description: Host component of the tracked page URL, used to distinguish sites or subdomains.
+      - name: page_urlport
+        data_type: number
+        description: Port component supplied for the tracked page URL; may be absent when no port is recorded.
+      - name: page_urlpath
+        data_type: varchar
+        description: Path component of the tracked page URL, excluding its query string and fragment.
+      - name: page_urlquery
+        data_type: varchar
+        description: Query-string component of the tracked page URL; may be absent when the URL has no query string.
+      - name: page_urlfragment
+        data_type: varchar
+        description: Fragment component of the tracked page URL; may be absent when the URL has no fragment.
+      - name: collector_tstamp
+        data_type: timestamp_ntz
+        description: Source collector timestamp for the event; the latest value per page view is exposed in fct_page_views.
+      - name: derived_tstamp
+        data_type: timestamp_ntz
+        description: Source-derived event timestamp; the earliest value per page view is used as page_view_start.
