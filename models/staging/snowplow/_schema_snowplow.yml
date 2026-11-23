@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  - name: stg_snowplow__events
+    description: >-
+      One row per Snowplow event. Retains event, visitor, session, device, URL,
+      and timing attributes without filtering or deduplication. Tagged nightly.
+    columns:
+      - name: event_id
+        data_type: varchar
+        description: Source event identifier; intended primary key for individual tracked events.
+        data_tests:
+          - unique
+          - not_null
+      - name: page_view_id
+        data_type: varchar
+        description: Identifier grouping events associated with a page view; used to aggregate activity in fct_page_views.
+      - name: anonymous_user_id
+        data_type: varchar
+        description: Anonymous visitor identifier from the tracker; not a Jaffle Shop customer identifier.
+      - name: session_id
+        data_type: varchar
+        description: Source browsing-session identifier used to group visitor activity.
+      - name: event
+        data_type: varchar
+        description: Source event name; fct_page_views retains only records with the value page_view as its base rows.
+      - name: device_type
+        data_type: varchar
+        description: Source device classification for the tracked event; passed through without recoding.
+      - name: page_url
+        data_type: varchar
+        description: Full page URL captured with the event, including any query string or fragment supplied by the tracker.
+      - name: page_title
+        data_type: varchar
+        description: Page title captured by the tracker at the time of the event.
+      - name: page_urlscheme
+        data_type: varchar
+        description: Parsed URL scheme, such as http or https; retained as supplied by the source.
+      - name: page_urlhost
+        data_type: varchar
+        description: Parsed hostname component of the tracked page URL.
+      - name: page_urlport
+        data_type: number
+        description: Parsed port component of the tracked page URL; may be absent when the URL does not specify one.
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 65535
+      - name: page_urlpath
+        data_type: varchar
+        description: Parsed path component of the tracked page URL.
+      - name: page_urlquery
+        data_type: varchar
+        description: Parsed query-string component of the page URL; may be absent for URLs without a query string.
+      - name: page_urlfragment
+        data_type: varchar
+        description: Parsed fragment component of the page URL; may be absent for URLs without a fragment.
+      - name: collector_tstamp
+        data_type: timestamp_ntz
+        description: Source collector timestamp for the event; used to identify the latest collected activity for a page view.
+      - name: derived_tstamp
+        data_type: timestamp_ntz
+        description: Source-derived event timestamp; the earliest value per page_view_id becomes page_view_start downstream.

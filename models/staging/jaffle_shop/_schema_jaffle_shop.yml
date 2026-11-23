@@ -1,0 +1,98 @@
+version: 2
+
+models:
+  - name: stg_jaffle_shop__customers
+    description: >-
+      One row per customer from the Jaffle Shop customer source. Renames the
+      source identifier for consistent joins to orders; no customers are filtered out.
+    columns:
+      - name: customer_id
+        data_type: number
+        description: Source customer identifier, renamed from id; primary key used to join customers to orders.
+        data_tests:
+          - unique
+          - not_null
+      - name: first_name
+        data_type: varchar
+        description: Customer given name as supplied by the source, without normalization.
+      - name: last_name
+        data_type: varchar
+        description: Customer family name as supplied by the source, without normalization.
+
+  - name: stg_jaffle_shop__orders
+    description: >-
+      One row per Jaffle Shop order, including all source statuses. Renames the
+      order and customer identifiers and retains the source load timestamp.
+    columns:
+      - name: order_id
+        data_type: number
+        description: Source order identifier, renamed from id; primary key for order and payment joins.
+        data_tests:
+          - unique
+          - not_null
+      - name: customer_id
+        data_type: number
+        description: Customer who placed the order, renamed from user_id; joins to stg_jaffle_shop__customers.customer_id.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop__customers')
+                field: customer_id
+      - name: order_date
+        data_type: date
+        description: Source order date, used to calculate each customer's first and most recent order dates.
+        data_tests:
+          - not_null
+      - name: status
+        data_type: varchar
+        description: Source order lifecycle status; returned and return-pending orders remain in downstream order counts.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - returned
+                  - completed
+                  - return_pending
+                  - placed
+                  - shipped
+      - name: _etl_loaded_at
+        data_type: timestamp_ntz
+        description: Source ingestion timestamp retained for load monitoring; no timezone conversion is applied.
+
+  - name: stg_jaffle_shop__products
+    description: >-
+      One row per product SKU in the Jaffle Shop catalog. Product attributes and
+      price are passed through from the source, with name and type renamed for clarity.
+    columns:
+      - name: sku
+        data_type: varchar
+        description: Source stock-keeping unit identifying a product; primary key of the catalog model.
+        data_tests:
+          - unique
+          - not_null
+      - name: product_name
+        data_type: varchar
+        description: Display name of the catalog product, renamed from name.
+        data_tests:
+          - not_null
+      - name: product_type
+        data_type: varchar
+        description: Source product category, renamed from type; no recategorization is performed.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['jaffle', 'beverage']
+      - name: description
+        data_type: varchar
+        description: Free-text product description supplied by the source catalog.
+      - name: price
+        data_type: number
+        description: Source catalog price passed through unchanged; this model does not establish currency or convert monetary units.
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0

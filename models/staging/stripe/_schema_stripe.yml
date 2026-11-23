@@ -1,0 +1,52 @@
+version: 2
+
+models:
+  - name: stg_stripe__payment
+    description: >-
+      One row per Stripe payment record, retaining all payment statuses. Converts
+      amount from cents to USD using cents_to_dollars and renames identifiers.
+    columns:
+      - name: amount_usd
+        data_type: number
+        description: Source amount divided by 100 and cast to numeric(16, 2); only successful payments contribute to downstream order amounts.
+        data_tests:
+          - not_null
+      - name: created
+        data_type: date
+        description: Payment creation date supplied by Stripe; retained without date transformation.
+        data_tests:
+          - not_null
+      - name: payment_id
+        data_type: number
+        description: Source payment identifier, renamed from id; primary key of the payment model.
+        data_tests:
+          - unique
+          - not_null
+      - name: order_id
+        data_type: number
+        description: Order associated with the payment, renamed from orderid; multiple payments can belong to one order.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop__orders')
+                field: order_id
+      - name: payment_method
+        data_type: varchar
+        description: Source payment-method category, renamed from paymentmethod without recoding.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['credit_card', 'bank_transfer', 'coupon', 'gift_card']
+      - name: status
+        data_type: varchar
+        description: Source payment status; fct_orders sums amount_usd only for records whose status is success.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['success', 'fail']
+      - name: _batched_at
+        data_type: timestamp_ltz
+        description: Source ingestion-batch timestamp retained for payment load monitoring.
