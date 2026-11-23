@@ -1,0 +1,140 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: One row per source customer, including customers without orders, enriched with order history and successful-payment lifetime value across all order statuses.
+    columns:
+      - name: customer_id
+        data_type: number
+        description: Customer-grain key inherited from staging; the left join to aggregated orders must preserve one row per customer.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop__customers')
+                field: customer_id
+      - name: first_name
+        data_type: varchar
+        description: Customer given name passed through from stg_jaffle_shop__customers.
+      - name: last_name
+        data_type: varchar
+        description: Customer family name passed through from stg_jaffle_shop__customers.
+      - name: first_order_date
+        data_type: date
+        description: Earliest order_date across the customer's orders, without status filtering; null when the customer has no orders.
+      - name: most_recent_order_date
+        data_type: date
+        description: Latest order_date across the customer's orders, without status filtering; null when the customer has no orders.
+      - name: number_of_orders
+        data_type: number
+        description: Count of order_id across the customer's orders, including all statuses; explicitly set to zero for customers without orders.
+        data_tests:
+          - not_null
+      - name: lifetime_value
+        data_type: number
+        description: Sum of fct_orders.amount_usd across the customer's orders in USD; includes successful payments only and remains null for customers without orders.
+
+  - name: fct_orders
+    description: One row per source order, including all statuses, with the sum of successful payment amounts in USD; orders without successful payments have a zero amount.
+    columns:
+      - name: order_id
+        data_type: number
+        description: Order-grain key inherited from staging; payment aggregation must preserve one row per order.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop__orders')
+                field: order_id
+      - name: customer_id
+        data_type: number
+        description: Customer who placed the order, passed through from staging and used to aggregate customer history.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_id
+      - name: order_date
+        data_type: date
+        description: Source order date, without filtering on order or payment status.
+      - name: amount_usd
+        data_type: number
+        description: Sum of payment amounts in USD where payment status equals success; coalesced to zero when no successful payment amount is available.
+        data_tests:
+          - not_null
+
+  - name: fct_page_views
+    description: One row per Snowplow page_view event, left joined to metrics grouped by page_view_id across all event types; page_view_id is not deduplicated by this model.
+    columns:
+      - name: page_view_id
+        data_type: varchar
+        description: Page-view grouping key shared by the retained page_view event and its related events; the SQL does not enforce uniqueness.
+      - name: event_id
+        data_type: varchar
+        description: Identifier of the retained page_view event; the event-grain key of this mart.
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_snowplow__events')
+                field: event_id
+      - name: anonymous_user_id
+        data_type: varchar
+        description: Anonymous visitor identifier from the retained page_view event; not linked to the customer dimension.
+      - name: session_id
+        data_type: varchar
+        description: Session identifier from the retained page_view event.
+      - name: event
+        data_type: varchar
+        description: Event type from staging; this mart retains only page_view events.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [page_view]
+      - name: device_type
+        data_type: varchar
+        description: Source device classification from the retained page_view event.
+      - name: page_url
+        data_type: varchar
+        description: Full URL recorded on the retained page_view event.
+      - name: page_title
+        data_type: varchar
+        description: Page title recorded on the retained page_view event.
+      - name: page_urlscheme
+        data_type: varchar
+        description: URL scheme from the retained page_view event.
+      - name: page_urlhost
+        data_type: varchar
+        description: URL host from the retained page_view event.
+      - name: page_urlport
+        data_type: number
+        description: Optional URL port from the retained page_view event.
+      - name: page_urlpath
+        data_type: varchar
+        description: URL path from the retained page_view event, suitable for page-level reporting.
+      - name: page_urlquery
+        data_type: varchar
+        description: Optional URL query string from the retained page_view event.
+      - name: page_urlfragment
+        data_type: varchar
+        description: Optional URL fragment from the retained page_view event.
+      - name: collector_tstamp
+        data_type: timestamp_ntz
+        description: Collector timestamp of the retained page_view event, rather than the latest timestamp across related events.
+      - name: derived_tstamp
+        data_type: timestamp_ntz
+        description: Derived timestamp of the retained page_view event, rather than the earliest timestamp across related events.
+      - name: approx_time_on_page
+        data_type: number
+        description: Approximate seconds computed as count of all events sharing page_view_id multiplied by 10, including the page_view event; null if the grouping key does not join.
+      - name: page_view_start
+        data_type: timestamp_ntz
+        description: Minimum derived_tstamp across all events sharing page_view_id, not just page_view events; null if no matching group is joined.
+      - name: max_collector_tstamp
+        data_type: timestamp_ntz
+        description: Maximum collector_tstamp across all events sharing page_view_id; null if no matching group is joined.

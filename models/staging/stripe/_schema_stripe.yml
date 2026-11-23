@@ -1,0 +1,52 @@
+version: 2
+
+models:
+  - name: stg_stripe__payment
+    description: One row per source payment record, including successful and failed payments; amounts are converted from cents to USD.
+    columns:
+      - name: amount_usd
+        data_type: number
+        description: Source amount divided by 100 and cast to numeric(16, 2) by cents_to_dollars; fct_orders includes only records with status success.
+        data_tests:
+          - not_null
+      - name: created
+        data_type: date
+        description: Source payment creation date; distinct from the order date and ingestion timestamp.
+        data_tests:
+          - not_null
+      - name: payment_id
+        data_type: number
+        description: Source payment id; identifies an individual payment record, so multiple payments may share an order_id.
+        data_tests:
+          - unique
+          - not_null
+      - name: order_id
+        data_type: number
+        description: Source orderid renamed to order_id; associates this payment with a Jaffle Shop order.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop__orders')
+                field: order_id
+      - name: payment_method
+        data_type: varchar
+        description: Source payment instrument category, retained for payment-method analysis.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [credit_card, bank_transfer, coupon, gift_card]
+      - name: status
+        data_type: varchar
+        description: Source payment outcome; only success contributes to order amounts, while fail remains available in staging.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [success, fail]
+      - name: _batched_at
+        data_type: timestamp_ltz
+        description: Source batch ingestion timestamp; not the payment creation date.
+        data_tests:
+          - not_null
