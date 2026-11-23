@@ -1,0 +1,176 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: >-
+      Customer summary at one row per customer, including customers without
+      orders. Aggregates all orders regardless of order status. number_of_orders
+      defaults to zero; order dates and lifetime_value remain null without orders.
+    data_tests:
+      - dbt_utils.expression_is_true:
+          name: customer_order_summary_is_consistent
+          description: >-
+            Customers without orders must have null order dates and lifetime value;
+            customers with orders must have ordered dates and a payment total.
+            Inspect fct_orders for the failing customer_id when this fails.
+          arguments:
+            expression: >-
+              (number_of_orders = 0 and first_order_date is null
+              and most_recent_order_date is null and lifetime_value is null)
+              or (number_of_orders > 0 and first_order_date is not null
+              and most_recent_order_date is not null
+              and first_order_date <= most_recent_order_date
+              and lifetime_value is not null)
+    columns:
+      - name: customer_id
+        data_type: number
+        description: "Customer identifier from stg_jaffle_shop__customers; primary key of the customer summary."
+        data_tests:
+          - unique
+          - not_null
+      - name: first_name
+        data_type: varchar
+        description: "Customer's given name passed through from stg_jaffle_shop__customers without normalization."
+      - name: last_name
+        data_type: varchar
+        description: "Customer's family name passed through from stg_jaffle_shop__customers without normalization."
+      - name: first_order_date
+        data_type: date
+        description: "Earliest order_date across all of the customer's orders, including returns; null when the customer has no orders."
+      - name: most_recent_order_date
+        data_type: date
+        description: "Latest order_date across all of the customer's orders, including returns; null when the customer has no orders."
+      - name: number_of_orders
+        data_type: number
+        description: "Count of order_id across all order statuses for the customer; defaults to zero for customers without orders."
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: lifetime_value
+        data_type: number
+        description: >-
+          Sum of fct_orders.amount_usd for the customer in USD, counting successful
+          payments across all orders. No explicit refund subtraction or order-status
+          filter is applied. Null for customers without orders.
+
+  - name: fct_orders
+    description: >-
+      Order fact at one row per Jaffle Shop order, retaining every order status.
+      Sums successful Stripe payments per order and defaults the amount to zero
+      when no successful payment amount is available.
+    columns:
+      - name: order_id
+        data_type: number
+        description: "Order identifier from stg_jaffle_shop__orders; primary key after payment aggregation and the left join."
+        data_tests:
+          - unique
+          - not_null
+      - name: customer_id
+        data_type: number
+        description: "Customer who placed the order; joins to the customer dimension."
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop__customers')
+                field: customer_id
+      - name: order_date
+        data_type: date
+        description: "Order date passed through from stg_jaffle_shop__orders, used for customer order-history aggregation."
+      - name: amount_usd
+        data_type: number
+        description: >-
+          Total USD amount of payments whose status is success for this order.
+          Defaults to zero when no successful amount exists. Includes orders in
+          every status and does not explicitly subtract refunds.
+        data_tests:
+          - not_null
+
+  - name: fct_page_views
+    description: >-
+      One row per Snowplow event whose event type is page_view, keyed by event_id.
+      Retains all event attributes and left joins metrics aggregated over all
+      events sharing page_view_id. page_view_id is a grouping key, not a guaranteed
+      primary key; null page_view_id values cannot match the aggregate join.
+    columns:
+      - name: page_view_id
+        data_type: varchar
+        description: "Page grouping identifier used to join all associated events to this page-view event; null values yield null aggregate metrics."
+      - name: event_id
+        data_type: varchar
+        description: "Identifier of the original page_view event; primary key at this fact's event grain."
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_snowplow__events')
+                field: event_id
+      - name: anonymous_user_id
+        data_type: varchar
+        description: "Anonymous visitor identifier from the page_view event; no Jaffle Shop customer mapping is defined."
+      - name: session_id
+        data_type: varchar
+        description: "Tracking session identifier from the page_view event for session-level analysis."
+      - name: event
+        data_type: varchar
+        description: "Source event type, restricted by this model to the literal page_view."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['page_view']
+      - name: device_type
+        data_type: varchar
+        description: "Source device classification captured on the page_view event."
+      - name: page_url
+        data_type: varchar
+        description: "Full page URL captured on the page_view event, passed through unchanged."
+      - name: page_title
+        data_type: varchar
+        description: "Source page title captured on the page_view event."
+      - name: page_urlscheme
+        data_type: varchar
+        description: "Scheme component of the page-view URL, passed through from the tracked event."
+      - name: page_urlhost
+        data_type: varchar
+        description: "Host component of the page-view URL, used to distinguish tracked domains."
+      - name: page_urlport
+        data_type: number
+        description: "Source port component of the page-view URL; may be absent when no explicit port is supplied."
+      - name: page_urlpath
+        data_type: varchar
+        description: "Path component of the page-view URL, excluding host, query string, and fragment."
+      - name: page_urlquery
+        data_type: varchar
+        description: "Optional query-string component of the page-view URL, passed through from the tracked event."
+      - name: page_urlfragment
+        data_type: varchar
+        description: "Optional fragment component of the page-view URL, passed through from the tracked event."
+      - name: collector_tstamp
+        data_type: timestamp_ntz
+        description: "Collector timestamp of this individual page_view event, distinct from max_collector_tstamp across associated events."
+      - name: derived_tstamp
+        data_type: timestamp_ntz
+        description: "Source-derived timestamp of this individual page_view event, distinct from page_view_start across associated events."
+      - name: approx_time_on_page
+        data_type: number
+        description: >-
+          Heuristic time-on-page value calculated as count of all events sharing
+          page_view_id multiplied by 10. Interpreting this as seconds assumes a
+          ten-second event cadence, which the model does not validate. Null if
+          page_view_id cannot join to the aggregate.
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 10
+                inclusive: true
+      - name: page_view_start
+        data_type: timestamp_ntz
+        description: "Minimum derived_tstamp across all events sharing page_view_id; null if no aggregate joins or all timestamps in the group are null."
+      - name: max_collector_tstamp
+        data_type: timestamp_ntz
+        description: "Maximum collector_tstamp across all events sharing page_view_id; null if no aggregate joins or all timestamps in the group are null."

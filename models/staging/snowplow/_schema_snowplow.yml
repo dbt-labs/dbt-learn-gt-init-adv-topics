@@ -1,0 +1,59 @@
+version: 2
+
+models:
+  - name: stg_snowplow__events
+    description: >-
+      Snowplow web events at one row per event_id, retaining source identifiers,
+      URL components, and timestamps without transformation. Includes all event
+      types used to select page views and estimate time on page downstream.
+    columns:
+      - name: event_id
+        data_type: varchar
+        description: "Unique identifier of the tracked event; primary key, distinct from the shared page_view_id."
+      - name: page_view_id
+        data_type: varchar
+        description: "Identifier grouping events associated with a page view; used for downstream page-event aggregation, not an event key."
+      - name: anonymous_user_id
+        data_type: varchar
+        description: "Anonymous visitor identifier supplied by tracking; no mapping to Jaffle Shop customer_id is defined."
+      - name: session_id
+        data_type: varchar
+        description: "Tracking session identifier for grouping a visitor's events into a session."
+      - name: event
+        data_type: varchar
+        description: "Tracked event type; the literal page_view selects records for fct_page_views."
+        data_tests:
+          - not_null
+      - name: device_type
+        data_type: varchar
+        description: "Device classification supplied by the tracking source, retained without recategorization."
+      - name: page_url
+        data_type: varchar
+        description: "Full tracked page URL; source URL components are also exposed separately."
+      - name: page_title
+        data_type: varchar
+        description: "Page title captured with the event, as supplied by tracking."
+      - name: page_urlscheme
+        data_type: varchar
+        description: "Scheme component of the page URL, such as the transport protocol, supplied by the source."
+      - name: page_urlhost
+        data_type: varchar
+        description: "Host component of the page URL used to distinguish tracked domains."
+      - name: page_urlport
+        data_type: number
+        description: "Port component of the page URL as supplied by the source; may be absent when not explicitly specified."
+      - name: page_urlpath
+        data_type: varchar
+        description: "Path component of the page URL, excluding the host, query string, and fragment."
+      - name: page_urlquery
+        data_type: varchar
+        description: "Query-string component of the page URL; optional because URLs need not contain a query."
+      - name: page_urlfragment
+        data_type: varchar
+        description: "Fragment component of the page URL; optional because URLs need not contain a fragment."
+      - name: collector_tstamp
+        data_type: timestamp_ntz
+        description: "Source collector timestamp for the event; downstream aggregation takes its maximum per page_view_id."
+      - name: derived_tstamp
+        data_type: timestamp_ntz
+        description: "Source-derived event timestamp, passed through unchanged; downstream aggregation takes its minimum per page_view_id."
