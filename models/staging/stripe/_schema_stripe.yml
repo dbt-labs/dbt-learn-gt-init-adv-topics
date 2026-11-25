@@ -11,7 +11,7 @@ models:
         description: Source amount divided by 100 and cast to numeric(16, 2); payment amount in USD.
         data_tests:
           - not_null
-      - name: created
+      - name: created_at
         data_type: date
         description: Creation date recorded on the source payment record.
         data_tests:

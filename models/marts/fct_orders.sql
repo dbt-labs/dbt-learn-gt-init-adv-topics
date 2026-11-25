@@ -1,7 +1,7 @@
 {{ config(
     materialized = 'incremental',
     incremental_strategy = 'microbatch',
-    event_time = 'order_month',
+    event_time = 'order_date',
     begin = '2018-01-01',
     batch_size = 'month',
     lookback = 1
