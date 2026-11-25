@@ -16,6 +16,8 @@ models:
 
   - name: stg_jaffle_shop__orders
     description: One row per Jaffle Shop order, retaining its source status and ingestion timestamp.
+    config:
+      event_time: order_date
     columns:
       - name: order_id
         description: Source order identifier used to join orders to Stripe payments.

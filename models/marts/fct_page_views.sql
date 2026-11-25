@@ -1,10 +1,10 @@
-
-{{
-    config(
-        tags='nightly',
-        materialized='incremental'
-    )
-}}
+{{ config(
+    materialized = 'incremental',
+    incremental_strategy = 'merge',
+    unique_key = 'page_view_id',
+    on_schema_change = 'append_new_columns',
+    tags = ['nightly']
+) }}
 
 with events as (
     select * from {{ ref('stg_snowplow__events') }}

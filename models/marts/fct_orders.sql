@@ -1,3 +1,13 @@
+{{ config(
+    materialized = 'incremental',
+    incremental_strategy = 'microbatch',
+    event_time = 'order_date',
+    begin = '2018-01-01',
+    batch_size = 'month',
+    lookback = 1
+) }}
+
+
 with orders as  (
     select * from {{ ref('stg_jaffle_shop__orders' )}}
 ),
@@ -21,6 +31,7 @@ final as (
         orders.order_id,
         orders.customer_id,
         orders.order_date,
+        DATE_TRUNC('month', orders.order_date) AS order_month,
         coalesce(order_payments.amount_usd, 0) as amount_usd
 
     from orders
