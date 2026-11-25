@@ -8,7 +8,8 @@ source as (
 
 renamed as (
 
-    select
+    select 
+        {{ dbt_utils.generate_surrogate_key(['id', 'paymentmethod']) }} as order_payment_key,
         {{ cents_to_dollars('amount') }} as amount_usd,
         created,
         id as payment_id,
