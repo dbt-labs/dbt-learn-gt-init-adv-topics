@@ -46,7 +46,7 @@ models:
         description: Date the order was placed, as recorded by the shop; used for customer first and most recent order dates.
         data_tests:
           - not_null
-      - name: status
+      - name: order_status
         data_type: varchar
         description: Source order lifecycle status; returned and return_pending orders remain in downstream order counts.
         data_tests:
