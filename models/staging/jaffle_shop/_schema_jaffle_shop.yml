@@ -18,6 +18,8 @@ models:
         description: Customer's family name as recorded in Jaffle Shop; may be abbreviated by the source.
 
   - name: stg_jaffle_shop__orders
+    config:
+      event_time: order_date
     description: One row per Jaffle Shop order, retaining its customer, order status, and ingestion timestamp.
     columns:
       - name: order_id

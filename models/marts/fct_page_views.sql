@@ -1,12 +1,17 @@
-{{
-    config(
-        tags='nightly',
-        materialized='incremental'
-    )
-}}
+{{ config(
+    materialized = 'incremental',
+    incremental_strategy = 'microbatch',
+    event_time = 'order_month',
+    begin = '2018-01-01',
+    batch_size = 'month',
+    lookback = 1
+) }}
 
 with events as (
     select * from {{ ref('stg_snowplow__events') }}
+    {% if is_incremental() %}
+    where collector_tstamp >= (select dateadd('day', -3, max(max_collector_tstamp)) from {{ this }})
+    {% endif %}
 ),
 page_views as (
     select * from events
