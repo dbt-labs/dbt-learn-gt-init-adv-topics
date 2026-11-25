@@ -1,0 +1,10 @@
+selectors:
+  - name: marts_not_nightly
+    description: "Marts models except the nightly ones"
+    definition:
+      union:
+        - method: tag
+          value: marts
+        - exclude:
+            - method: tag
+              value: nightly

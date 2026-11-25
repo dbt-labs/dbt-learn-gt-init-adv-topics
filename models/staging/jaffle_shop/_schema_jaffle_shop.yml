@@ -6,6 +6,8 @@ models:
           - unique
           - not_null             
   - name: stg_jaffle_shop__orders
+    config:
+      event_time: order_date
     columns:
       - name: order_id
         data_tests:
