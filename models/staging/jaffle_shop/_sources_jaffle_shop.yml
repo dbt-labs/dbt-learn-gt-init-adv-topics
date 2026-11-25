@@ -8,7 +8,6 @@ sources:
       - name: orders
         freshness: # default freshness
           warn_after: {count: 15, period: day}
-          error_after: {count: 30, period: minute}
         loaded_at_field: _etl_loaded_at
 
 
