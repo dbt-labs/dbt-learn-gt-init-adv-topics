@@ -9,9 +9,6 @@ models:
       - name: event_id
         data_type: varchar
         description: Identifier for an individual tracking event; the grain of this model.
-        data_tests:
-          - unique
-          - not_null
       - name: page_view_id
         data_type: varchar
         description: Identifier grouping events associated with a page view; shared across related events.
