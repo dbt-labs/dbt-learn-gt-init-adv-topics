@@ -1,10 +1,5 @@
 {{ config(
-    materialized = 'incremental',
-    incremental_strategy = 'microbatch',
-    event_time = 'order_month',
-    begin = '2018-01-01',
-    batch_size = 'month',
-    lookback = 1
+    tags = ['nightly']
 ) }}
 
 with events as (
