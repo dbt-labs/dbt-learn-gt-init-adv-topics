@@ -20,6 +20,8 @@ models:
         description: Customer's last name as supplied by the shop; no normalization is applied.
 
   - name: stg_jaffle_shop__orders
+    config:
+      event_time: order_date
     description: >-
       One row per shop order, retaining all order statuses, including returns.
       Renames source identifiers and preserves the ingestion timestamp.
