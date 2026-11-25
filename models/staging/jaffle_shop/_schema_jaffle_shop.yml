@@ -1,0 +1,91 @@
+version: 2
+
+models:
+  - name: stg_jaffle_shop__customers
+    description: One row per source Jaffle Shop customer, with the source id renamed to customer_id.
+    columns:
+      - name: customer_id
+        data_type: number
+        description: Source customer id used to join customer records to orders.
+        data_tests:
+          - unique
+          - not_null
+      - name: first_name
+        data_type: varchar
+        description: Customer given name, passed through without normalization.
+      - name: last_name
+        data_type: varchar
+        description: Customer family name, passed through without normalization.
+
+  - name: stg_jaffle_shop__orders
+    description: One row per source Jaffle Shop order, retaining all order statuses.
+    columns:
+      - name: order_id
+        data_type: number
+        description: Source order id used to link orders to Stripe payment attempts.
+        data_tests:
+          - unique
+          - not_null
+      - name: customer_id
+        data_type: number
+        description: Source user_id renamed to customer_id; identifies the customer who placed the order.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop__customers')
+                field: customer_id
+      - name: order_date
+        data_type: date
+        description: Source order date used to determine first and most recent customer orders.
+        data_tests:
+          - not_null
+      - name: status
+        data_type: varchar
+        description: Source order lifecycle status; returned and return_pending orders remain in downstream order counts.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - returned
+                  - completed
+                  - return_pending
+                  - placed
+                  - shipped
+      - name: _etl_loaded_at
+        data_type: timestamp_ntz
+        description: Source ingestion timestamp used by the orders source freshness check.
+        data_tests:
+          - not_null
+
+  - name: stg_jaffle_shop__products
+    description: One row per source product SKU, with name and type renamed for analytical use.
+    columns:
+      - name: sku
+        data_type: varchar
+        description: Source stock-keeping unit identifying a product.
+        data_tests:
+          - unique
+          - not_null
+      - name: product_name
+        data_type: varchar
+        description: Source product name, renamed from name without transformation.
+        data_tests:
+          - not_null
+      - name: product_type
+        data_type: varchar
+        description: Source product category, renamed from type without transformation.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [jaffle, beverage]
+      - name: description
+        data_type: varchar
+        description: Source product description text, passed through unchanged.
+      - name: price
+        data_type: number
+        description: Source product price passed through unchanged; this model does not convert currency or units.
+        data_tests:
+          - not_null

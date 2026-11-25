@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: customers
+    description: >-
+      One row per raw Jaffle Shop customer, including customers with no orders.
+      Summarizes all raw orders regardless of status. This standalone model reads
+      raw tables directly; dim_customers is the ref-based mart with payment value.
+    columns:
+      - name: customer_id
+        data_type: number
+        description: Source customer identifier; the grain of this customer summary.
+        data_tests:
+          - unique
+          - not_null
+      - name: first_name
+        data_type: varchar
+        description: Customer given name as recorded in the raw customer table.
+      - name: last_name
+        data_type: varchar
+        description: Customer family name as recorded in the raw customer table.
+      - name: first_order_date
+        data_type: date
+        description: Earliest raw order date across all statuses; null for customers with no orders.
+      - name: most_recent_order_date
+        data_type: date
+        description: Latest raw order date across all statuses; null for customers with no orders.
+      - name: number_of_orders
+        data_type: number
+        description: Count of raw orders across all statuses; zero for customers with no orders.
+        data_tests:
+          - not_null

@@ -1,0 +1,52 @@
+version: 2
+
+models:
+  - name: stg_stripe__payment
+    description: >-
+      One row per source Stripe payment record, including successful and unsuccessful
+      payment attempts. Amounts are converted from cents to USD with two decimal places.
+    columns:
+      - name: amount_usd
+        data_type: number
+        description: Source amount divided by 100 and cast to numeric(16, 2); payment amount in USD.
+        data_tests:
+          - not_null
+      - name: created
+        data_type: date
+        description: Creation date recorded on the source payment record.
+        data_tests:
+          - not_null
+      - name: payment_id
+        data_type: number
+        description: Source payment id identifying an individual payment record or attempt.
+        data_tests:
+          - unique
+          - not_null
+      - name: order_id
+        data_type: number
+        description: Source orderid renamed to order_id; links the payment attempt to its Jaffle Shop order.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_jaffle_shop__orders')
+                field: order_id
+      - name: payment_method
+        data_type: varchar
+        description: Payment method recorded on the source payment attempt, renamed from paymentmethod.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [credit_card, coupon, bank_transfer, gift_card]
+      - name: status
+        data_type: varchar
+        description: Source payment outcome; only records with status success contribute to fct_orders.amount_usd.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [success, fail]
+      - name: _batched_at
+        data_type: timestamp_ltz
+        description: Source ingestion batch timestamp for the payment record; distinct from the payment creation date.
