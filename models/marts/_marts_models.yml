@@ -1,0 +1,11 @@
+models:
+  - name: dim_customers
+    description: One record per customer with their order summary
+    config:
+      group: marketing
+      access: public
+  - name: fct_orders
+    description: One record per order 
+    config:
+      group: marketing
+      access: public
