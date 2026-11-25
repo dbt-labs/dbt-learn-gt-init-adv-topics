@@ -20,6 +20,8 @@ models:
         description: Customer's family name as supplied by the shop, without normalization.
 
   - name: stg_jaffle_shop__orders
+    config:
+      event_time: order_date
     description: >-
       One row per source order across all order statuses, including returned and pending orders.
       Renames order and customer identifiers without filtering records.

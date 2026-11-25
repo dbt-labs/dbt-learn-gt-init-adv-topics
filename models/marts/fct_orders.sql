@@ -1,3 +1,12 @@
+{{ config(
+    materialized = 'incremental',
+    incremental_strategy = 'microbatch',
+    event_time = 'order_month',
+    begin = '2018-01-01',
+    batch_size = 'month',
+    lookback = 1
+) }}
+
 with orders as  (
     select * from {{ ref('stg_jaffle_shop__orders' )}}
 ),
