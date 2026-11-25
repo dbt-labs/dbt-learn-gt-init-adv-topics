@@ -1,14 +1,16 @@
-{{
-    config(
-        tags='nightly',
-        materialized='incremental'
-    )
-}}
+{{ config(
+    materialized = 'incremental',
+    incremental_strategy = 'delete+insert',
+    unique_key = 'page_view_id',
+    on_schema_change = 'append_new_columns',
+    tags=['nightly']
+) }}
 
 with events as (
     select * from {{ ref('stg_snowplow__events') }}
     {% if is_incremental() %}
-        where collector_tstamp >= (select max(collector_tstamp) from {{ this }})
+    -- this filter will only be applied on an incremental run
+    where collector_tstamp >= (select dateadd('day', -3, max(max_collector_tstamp)) from {{ this }})
     {% endif %}
 ),
 page_views as (
