@@ -1,11 +1,13 @@
-{{
-    config(
-        tags='nightly'
-    )
-}}
+{{ config(
+    materialized = 'incremental',
+    incremental_strategy = 'merge',
+    unique_key = 'page_view_id',
+    on_schema_change = 'append_new_columns'
+) }}
 
 with events as (
     select * from {{ ref('stg_snowplow__events') }}
+
 ),
 page_views as (
     select * from events

@@ -19,6 +19,8 @@ models:
 
   - name: stg_jaffle_shop__orders
     description: One row per source order, including its customer, order date, lifecycle status, and ingestion timestamp. No order statuses are filtered out.
+    config: 
+      event_time: order_date
     columns:
       - name: order_id
         data_type: number
